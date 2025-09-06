@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Clock - Customizable</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="Digital Clock">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Digital Clock">
+    <meta name="description" content="A beautiful customizable digital clock with multiple styles and themes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="msapplication-config" content="none">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="msapplication-TileColor" content="#1a1a1a">
+    <meta name="theme-color" content="#007acc">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="shortcut icon" href="icon-192.png">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Settings Toggle Button -->
+    <button id="settingsToggle" class="settings-toggle">⚙️</button>
+    
+    <!-- Main Clock Container -->
+    <div id="clockContainer" class="clock-container">
+        <div id="timeDisplay" class="time-display">
+            <span id="hours">12</span><span class="separator">:</span><span id="minutes">00</span><span class="separator">:</span><span id="seconds">00</span>
+            <span id="ampm" class="ampm">AM</span>
+        </div>
+        <div id="date" class="date-display">Loading...</div>
+    </div>
+
+    <!-- Customization Panel -->
+    <div id="customPanel" class="custom-panel">
+        <div class="panel-header">
+            <h2>Customization</h2>
+            <button id="togglePanel" class="toggle-btn">×</button>
+        </div>
+        
+        <div class="panel-content">
+            <!-- Time Format Section -->
+            <div class="section">
+                <h3>Time Format</h3>
+                <div class="format-options">
+                    <button class="format-btn active" data-format="12">12 Hour</button>
+                    <button class="format-btn" data-format="24">24 Hour</button>
+                </div>
+            </div>
+
+            <!-- Time Style Section -->
+            <div class="section">
+                <h3>Time Style</h3>
+                <div class="style-grid">
+                    <button class="style-btn active" data-style="digital">Digital</button>
+                    <button class="style-btn" data-style="elegant">Elegant</button>
+                    <button class="style-btn" data-style="neon">Neon</button>
+                    <button class="style-btn" data-style="classic">Classic</button>
+                    <button class="style-btn" data-style="modern">Modern</button>
+                    <button class="style-btn" data-style="retro">Retro</button>
+                </div>
+            </div>
+
+            <!-- Background Section -->
+            <div class="section">
+                <h3>Background</h3>
+                <div class="bg-options">
+                    <div class="bg-type">
+                        <label>
+                            <input type="radio" name="bgType" value="solid" checked>
+                            Solid Color
+                        </label>
+                        <input type="color" id="solidColor" value="#1a1a1a">
+                    </div>
+                    
+                    <div class="bg-type">
+                        <label>
+                            <input type="radio" name="bgType" value="gradient">
+                            Gradient
+                        </label>
+                        <div class="gradient-controls">
+                            <input type="color" id="gradientColor1" value="#1a1a1a">
+                            <input type="color" id="gradientColor2" value="#4a4a4a">
+                        </div>
+                    </div>
+                    
+                    <div class="bg-type">
+                        <label>
+                            <input type="radio" name="bgType" value="image">
+                            Custom Image
+                        </label>
+                        <input type="file" id="imageUpload" accept="image/*">
+                    </div>
+                    
+                    <div class="bg-type">
+                        <label>
+                            <input type="radio" name="bgType" value="live">
+                            Live Wallpaper
+                        </label>
+                        <select id="liveWallpaper" class="live-wallpaper-select">
+                            <option value="matrix">Matrix Rain</option>
+                            <option value="particles">Floating Particles</option>
+                            <option value="waves">Animated Waves</option>
+                            <option value="stars">Starfield</option>
+                            <option value="geometric">Geometric Patterns</option>
+                        </select>
+                        <input type="file" id="customLiveWallpaper" accept="video/*,image/gif">
+                    </div>
+                </div>
+
+                <h4>Preset Backgrounds</h4>
+                <div class="preset-grid">
+                    <div class="preset-bg" data-bg="dark-gradient" style="background: linear-gradient(45deg, #1a1a1a, #2d2d30);"></div>
+                    <div class="preset-bg" data-bg="blue-gradient" style="background: linear-gradient(45deg, #0066cc, #004499);"></div>
+                    <div class="preset-bg" data-bg="purple-gradient" style="background: linear-gradient(45deg, #6a0dad, #4b0082);"></div>
+                    <div class="preset-bg" data-bg="green-gradient" style="background: linear-gradient(45deg, #2d5016, #3d7c47);"></div>
+                    <div class="preset-bg" data-bg="red-gradient" style="background: linear-gradient(45deg, #8b0000, #dc143c);"></div>
+                    <div class="preset-bg" data-bg="sunset" style="background: linear-gradient(45deg, #ff6b6b, #feca57);"></div>
+                </div>
+            </div>
+
+            <!-- Font Color Section -->
+            <div class="section">
+                <h3>Font Color</h3>
+                <input type="color" id="fontColor" value="#ffffff">
+            </div>
+
+            <!-- Control Buttons -->
+            <div class="controls">
+                <button id="saveSettings" class="control-btn save">Save Settings</button>
+                <button id="loadSettings" class="control-btn load">Load Settings</button>
+                <button id="resetSettings" class="control-btn reset">Reset</button>
+                <button id="fullscreenBtn" class="control-btn fullscreen">Fullscreen</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(registrationError => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>

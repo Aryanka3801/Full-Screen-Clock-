@@ -808,7 +808,7 @@ body {
     transform: scale(1.05);
 }
 
-/* Settings Toggle Button */
+/* Settings Toggle Button - Enhanced for Android 4 compatibility */
 .settings-toggle {
     position: fixed;
     top: 20px;
@@ -825,6 +825,20 @@ body {
     -moz-transition: all 0.3s ease;
     transition: all 0.3s ease;
     z-index: 999;
+    
+    /* Android 4 touch compatibility */
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    
+    /* Ensure visibility on older browsers */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
 }
 
 .settings-toggle:hover {
@@ -860,6 +874,27 @@ body {
 
 .custom-panel::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.5);
+}
+
+/* Android 4 specific fallbacks */
+.android-4-fallback {
+    /* Fallback styles for very old Android browsers */
+    background-attachment: scroll !important;
+}
+
+.android-4-fallback video {
+    /* Force video to cover full screen on old Android */
+    min-width: 100% !important;
+    min-height: 100% !important;
+}
+
+/* Enhanced fallbacks for old browsers */
+body {
+    /* Ensure background properties work on older browsers */
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
 }
 
 /* Responsive Design */

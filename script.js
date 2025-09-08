@@ -143,6 +143,9 @@ DigitalClock.prototype.initializeElements = function() {
     this.loadButton = document.getElementById('loadSettings');
     this.resetButton = document.getElementById('resetSettings');
     this.fullscreenButton = document.getElementById('fullscreenBtn');
+    
+    // Ensure settings toggle visibility for older Android browsers
+    this.ensureSettingsToggleCompatibility();
 };
 
 DigitalClock.prototype.getElementsFromClass = function(className) {
@@ -154,6 +157,43 @@ DigitalClock.prototype.getElementsFromClass = function(className) {
         }
     }
     return elements;
+};
+
+// Ensure settings toggle compatibility for older Android browsers
+DigitalClock.prototype.ensureSettingsToggleCompatibility = function() {
+    if (this.settingsToggle) {
+        // Add fallback text if emoji isn't supported on older Android
+        var userAgent = navigator.userAgent;
+        var isOldAndroid = userAgent.indexOf('Android') > -1;
+        
+        if (isOldAndroid) {
+            var androidMatch = userAgent.match(/Android (\d+)\.(\d+)/);
+            if (androidMatch) {
+                var androidVersion = parseFloat(androidMatch[1] + '.' + androidMatch[2]);
+                if (androidVersion < 5.0) {
+                    // For Android 4.x, use text fallback instead of emoji
+                    this.settingsToggle.innerHTML = 'SET';
+                    this.settingsToggle.style.fontSize = '0.9em';
+                    this.settingsToggle.style.fontWeight = 'bold';
+                    console.log('Applied Android 4 fallback for settings toggle');
+                }
+            }
+        }
+        
+        // Add touch event handlers for better compatibility
+        var self = this;
+        addEvent(this.settingsToggle, 'touchstart', function(e) {
+            e.preventDefault();
+            self.toggleCustomPanel();
+        });
+        
+        // Ensure click events work properly on older browsers
+        addEvent(this.settingsToggle, 'mousedown', function(e) {
+            if (e.type === 'mousedown') {
+                self.toggleCustomPanel();
+            }
+        });
+    }
 };
 
 DigitalClock.prototype.bindEvents = function() {
@@ -413,9 +453,14 @@ DigitalClock.prototype.applyBackground = function() {
         case 'image':
             if (this.settings.customBackground) {
                 backgroundStyle = 'url(' + this.settings.customBackground + ')';
+                
+                // Enhanced background properties with fallbacks for older Android
                 document.body.style.backgroundSize = 'cover';
                 document.body.style.backgroundPosition = 'center';
                 document.body.style.backgroundRepeat = 'no-repeat';
+                
+                // Add fallback for browsers that don't support background-size: cover
+                this.applyImageBackgroundFallback();
             }
             break;
         case 'preset':
@@ -800,7 +845,10 @@ DigitalClock.prototype.createCustomLiveWallpaper = function() {
     this.liveWallpaperCanvas.style.left = '0';
     this.liveWallpaperCanvas.style.width = '100%';
     this.liveWallpaperCanvas.style.height = '100%';
+    
+    // CSS object-fit with fallback for older Android browsers
     this.liveWallpaperCanvas.style.objectFit = 'cover';
+    
     this.liveWallpaperCanvas.style.zIndex = '-1';
     this.liveWallpaperCanvas.style.pointerEvents = 'none';
     
@@ -813,17 +861,164 @@ DigitalClock.prototype.createCustomLiveWallpaper = function() {
     this.liveWallpaperCanvas.setAttribute('playsinline', 'true');
     this.liveWallpaperCanvas.setAttribute('webkit-playsinline', 'true'); // iOS compatibility
     
-    // Performance optimizations
+    // Performance optimizations and Android 4 fallback
     var self = this;
     this.liveWallpaperCanvas.addEventListener('loadeddata', function() {
         console.log('Live wallpaper video loaded and cached');
+        // Apply fallback scaling for older Android devices
+        self.applyVideoScalingFallback(self.liveWallpaperCanvas);
     });
     
     this.liveWallpaperCanvas.addEventListener('error', function(e) {
         console.error('Live wallpaper video error:', e);
     });
     
+    // Add resize listener for proper scaling on orientation change (Android specific)
+    addEvent(window, 'resize', function() {
+        if (self.liveWallpaperCanvas) {
+            self.applyVideoScalingFallback(self.liveWallpaperCanvas);
+        }
+    });
+    
     document.body.appendChild(this.liveWallpaperCanvas);
+};
+
+// Fallback video scaling for older Android devices that don't support object-fit
+DigitalClock.prototype.applyVideoScalingFallback = function(video) {
+    // Check if object-fit is supported
+    if (!('objectFit' in document.documentElement.style)) {
+        console.log('Object-fit not supported, applying manual scaling fallback');
+        
+        // Get container and video dimensions
+        var containerWidth = window.innerWidth;
+        var containerHeight = window.innerHeight;
+        
+        // Wait for video metadata to load
+        if (video.videoWidth && video.videoHeight) {
+            this.scaleVideoManually(video, containerWidth, containerHeight);
+        } else {
+            var self = this;
+            video.addEventListener('loadedmetadata', function() {
+                self.scaleVideoManually(video, containerWidth, containerHeight);
+            });
+        }
+    }
+};
+
+// Manual video scaling calculation for Android 4 and older browsers
+DigitalClock.prototype.scaleVideoManually = function(video, containerWidth, containerHeight) {
+    var videoWidth = video.videoWidth;
+    var videoHeight = video.videoHeight;
+    
+    if (!videoWidth || !videoHeight) return;
+    
+    // Calculate scale to cover the container (similar to object-fit: cover)
+    var scaleX = containerWidth / videoWidth;
+    var scaleY = containerHeight / videoHeight;
+    var scale = Math.max(scaleX, scaleY);
+    
+    // Calculate new dimensions
+    var newWidth = videoWidth * scale;
+    var newHeight = videoHeight * scale;
+    
+    // Calculate centering offsets
+    var offsetX = (containerWidth - newWidth) / 2;
+    var offsetY = (containerHeight - newHeight) / 2;
+    
+    // Apply the calculated styles
+    video.style.width = newWidth + 'px';
+    video.style.height = newHeight + 'px';
+    video.style.left = offsetX + 'px';
+    video.style.top = offsetY + 'px';
+    
+    console.log('Applied manual video scaling:', {
+        original: videoWidth + 'x' + videoHeight,
+        scaled: newWidth + 'x' + newHeight,
+        container: containerWidth + 'x' + containerHeight
+    });
+};
+
+// Fallback for image background scaling on older Android browsers
+DigitalClock.prototype.applyImageBackgroundFallback = function() {
+    // Check if background-size is supported
+    var testElement = document.createElement('div');
+    var backgroundSizeSupported = (
+        'backgroundSize' in testElement.style ||
+        'WebkitBackgroundSize' in testElement.style ||
+        'MozBackgroundSize' in testElement.style
+    );
+    
+    if (!backgroundSizeSupported) {
+        console.log('Background-size not supported, applying fallback');
+        
+        // For older browsers, create a full-screen background image element
+        var existingBg = document.getElementById('fallback-bg-image');
+        if (existingBg) {
+            existingBg.parentNode.removeChild(existingBg);
+        }
+        
+        var bgImage = document.createElement('img');
+        bgImage.id = 'fallback-bg-image';
+        bgImage.src = this.settings.customBackground;
+        bgImage.style.position = 'fixed';
+        bgImage.style.top = '0';
+        bgImage.style.left = '0';
+        bgImage.style.width = '100%';
+        bgImage.style.height = '100%';
+        bgImage.style.zIndex = '-10';
+        bgImage.style.pointerEvents = 'none';
+        
+        // Apply manual scaling similar to background-size: cover
+        var self = this;
+        bgImage.onload = function() {
+            self.scaleImageManually(bgImage, window.innerWidth, window.innerHeight);
+        };
+        
+        // Add resize listener for proper scaling
+        addEvent(window, 'resize', function() {
+            if (bgImage && bgImage.parentNode) {
+                self.scaleImageManually(bgImage, window.innerWidth, window.innerHeight);
+            }
+        });
+        
+        document.body.appendChild(bgImage);
+        
+        // Remove the background image from body to avoid duplication
+        document.body.style.backgroundImage = 'none';
+    }
+};
+
+// Manual image scaling for older browsers
+DigitalClock.prototype.scaleImageManually = function(img, containerWidth, containerHeight) {
+    var imgWidth = img.naturalWidth || img.width;
+    var imgHeight = img.naturalHeight || img.height;
+    
+    if (!imgWidth || !imgHeight) return;
+    
+    // Calculate scale to cover the container (similar to background-size: cover)
+    var scaleX = containerWidth / imgWidth;
+    var scaleY = containerHeight / imgHeight;
+    var scale = Math.max(scaleX, scaleY);
+    
+    // Calculate new dimensions
+    var newWidth = imgWidth * scale;
+    var newHeight = imgHeight * scale;
+    
+    // Calculate centering offsets
+    var offsetX = (containerWidth - newWidth) / 2;
+    var offsetY = (containerHeight - newHeight) / 2;
+    
+    // Apply the calculated styles
+    img.style.width = newWidth + 'px';
+    img.style.height = newHeight + 'px';
+    img.style.left = offsetX + 'px';
+    img.style.top = offsetY + 'px';
+    
+    console.log('Applied manual image scaling:', {
+        original: imgWidth + 'x' + imgHeight,
+        scaled: newWidth + 'x' + newHeight,
+        container: containerWidth + 'x' + containerHeight
+    });
 };
 
 // Simple Matrix Rain Animation

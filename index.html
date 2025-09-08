@@ -30,10 +30,75 @@
     <link rel="shortcut icon" href="icon-192.png">
     
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Supabase CDN -->
+    <script src="https://unpkg.com/@supabase/supabase-js"></script>
+    
+    <!-- Environment Configuration -->
+    <script>
+        // Supabase configuration - direct credentials for standalone app
+        window.SUPABASE_CONFIG = {
+            url: 'https://ruunbfbmpnvosuwrraaq.supabase.co',
+            key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ1dW5iZmJtcG52b3N1d3JyYWFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcyNTQ1NTQsImV4cCI6MjA3MjgzMDU1NH0.iAzw8ldJ3fDXQ7_nFAB_91v3Nph9avo2CKRkqNrZ_yM'
+        };
+    </script>
 </head>
 <body>
     <!-- Settings Toggle Button -->
     <button id="settingsToggle" class="settings-toggle">⚙️</button>
+    
+    <!-- Auth Toggle Button -->
+    <button id="authToggle" class="auth-toggle">👤</button>
+    
+    <!-- Authentication Panel -->
+    <div id="authPanel" class="auth-panel">
+        <div class="panel-header">
+            <h2 id="authTitle">Login / Signup</h2>
+            <button id="toggleAuthPanel" class="toggle-btn">×</button>
+        </div>
+        
+        <div id="authContent" class="auth-content">
+            <!-- Login/Signup Form -->
+            <div id="authForm" class="auth-form">
+                <input id="authEmail" type="email" placeholder="Email" class="auth-input">
+                <input id="authPassword" type="password" placeholder="Password" class="auth-input">
+                <div class="auth-buttons">
+                    <button id="signUpBtn" class="auth-btn signup">Sign Up</button>
+                    <button id="loginBtn" class="auth-btn login">Login</button>
+                </div>
+                <p id="authMsg" class="auth-message"></p>
+            </div>
+            
+            <!-- File Management (Hidden initially) -->
+            <div id="fileManagement" class="file-management" style="display:none;">
+                <div class="user-info">
+                    <p>Welcome, <span id="userEmail"></span>!</p>
+                    <button id="logoutBtn" class="auth-btn logout">Logout</button>
+                </div>
+                
+                <h3>Upload Files</h3>
+                <div class="upload-section">
+                    <div class="upload-type">
+                        <label>
+                            <input type="radio" name="uploadType" value="background" checked>
+                            Background Image
+                        </label>
+                    </div>
+                    <div class="upload-type">
+                        <label>
+                            <input type="radio" name="uploadType" value="livewallpaper">
+                            Live Wallpaper (Video/GIF)
+                        </label>
+                    </div>
+                    <input type="file" id="fileUpload" accept="image/*,video/*">
+                    <button id="uploadBtn" class="control-btn save">Upload File</button>
+                </div>
+                
+                <h3>Your Files</h3>
+                <div id="userFileList" class="user-file-list"></div>
+            </div>
+        </div>
+    </div>
     
     <!-- Main Clock Container -->
     <div id="clockContainer" class="clock-container">
@@ -150,19 +215,16 @@
 
     <script src="script.js"></script>
     
-    <!-- PWA Service Worker Registration -->
+    <!-- Debug Script -->
     <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('SW registered: ', registration);
-                    })
-                    .catch(registrationError => {
-                        console.log('SW registration failed: ', registrationError);
-                    });
-            });
-        }
+        window.addEventListener('load', function() {
+            console.log('Page loaded. Supabase config:', window.SUPABASE_CONFIG);
+            if (window.SUPABASE_CONFIG) {
+                console.log('URL starts with https:', window.SUPABASE_CONFIG.url.startsWith('https://'));
+                console.log('URL contains supabase.co:', window.SUPABASE_CONFIG.url.includes('supabase.co'));
+                console.log('Key length:', window.SUPABASE_CONFIG.key.length);
+            }
+        });
     </script>
 </body>
 </html>

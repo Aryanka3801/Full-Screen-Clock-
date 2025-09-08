@@ -424,7 +424,12 @@ DigitalClock.prototype.applyBackground = function() {
         case 'live':
             document.body.style.background = '#000000';
             document.body.style.backgroundImage = 'none';
-            this.createLiveWallpaper(this.settings.liveWallpaperType || 'matrix');
+            // Check if we have a custom live wallpaper URL first
+            if (this.settings.customLiveWallpaper) {
+                this.createLiveWallpaper('custom');
+            } else {
+                this.createLiveWallpaper(this.settings.liveWallpaperType || 'matrix');
+            }
             return;
     }
     
@@ -799,11 +804,24 @@ DigitalClock.prototype.createCustomLiveWallpaper = function() {
     this.liveWallpaperCanvas.style.zIndex = '-1';
     this.liveWallpaperCanvas.style.pointerEvents = 'none';
     
+    // Enhanced caching and performance settings
+    this.liveWallpaperCanvas.preload = 'auto'; // Preload the video
     this.liveWallpaperCanvas.src = customUrl;
     this.liveWallpaperCanvas.autoplay = true;
     this.liveWallpaperCanvas.loop = true;
     this.liveWallpaperCanvas.muted = true;
     this.liveWallpaperCanvas.setAttribute('playsinline', 'true');
+    this.liveWallpaperCanvas.setAttribute('webkit-playsinline', 'true'); // iOS compatibility
+    
+    // Performance optimizations
+    var self = this;
+    this.liveWallpaperCanvas.addEventListener('loadeddata', function() {
+        console.log('Live wallpaper video loaded and cached');
+    });
+    
+    this.liveWallpaperCanvas.addEventListener('error', function(e) {
+        console.error('Live wallpaper video error:', e);
+    });
     
     document.body.appendChild(this.liveWallpaperCanvas);
 };
@@ -983,5 +1001,861 @@ DigitalClock.prototype.startGeometric = function(ctx, canvas) {
     this.liveWallpaperAnimation = setInterval(draw, 16);
 };
 
+// Supabase Integration
+function SupabaseAuth() {
+    var self = this;
+    
+    // Initialize with null values - will be set from environment
+    this.supabaseUrl = null;
+    this.supabaseKey = null;
+    this.supabaseClient = null;
+    
+    this.currentUser = null;
+    this.userFiles = [];
+    
+    // Initialize auth UI elements
+    this.authToggle = null;
+    this.authPanel = null;
+    this.authForm = null;
+    this.fileManagement = null;
+    
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        addEvent(document, 'DOMContentLoaded', function() {
+            self.init();
+        });
+    } else {
+        this.init();
+    }
+}
+
+SupabaseAuth.prototype.init = function() {
+    this.initializeAuthElements();
+    this.bindAuthEvents();
+    this.initSupabaseClient();
+};
+
+// Add polyfills for older browsers
+if (!String.prototype.startsWith) {
+    String.prototype.startsWith = function(searchString, position) {
+        position = position || 0;
+        return this.substr(position, searchString.length) === searchString;
+    };
+}
+
+if (!String.prototype.includes) {
+    String.prototype.includes = function(search, start) {
+        'use strict';
+        if (typeof start !== 'number') {
+            start = 0;
+        }
+        
+        if (start + search.length > this.length) {
+            return false;
+        } else {
+            return this.indexOf(search, start) !== -1;
+        }
+    };
+}
+
+SupabaseAuth.prototype.initSupabaseClient = function() {
+    var self = this;
+    
+    // Enhanced browser compatibility check
+    this.checkBrowserCompatibility();
+    
+    // Wait for SUPABASE_CONFIG to be available
+    var checkConfig = function() {
+        if (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url && window.SUPABASE_CONFIG.key) {
+            console.log('Supabase config found:', window.SUPABASE_CONFIG.url.substring(0, 20) + '...');
+            // Check if URL is valid before creating client
+            // Legacy browser compatible URL validation
+            var urlValid = window.SUPABASE_CONFIG.url !== 'PLACEHOLDER_URL' && window.SUPABASE_CONFIG.key !== 'PLACEHOLDER_KEY';
+            var httpsValid = window.SUPABASE_CONFIG.url.indexOf('https://') === 0;
+            var supabaseValid = window.SUPABASE_CONFIG.url.indexOf('supabase.co') > -1;
+            
+            if (urlValid && httpsValid && supabaseValid) {
+                try {
+                    self.supabaseUrl = window.SUPABASE_CONFIG.url;
+                    self.supabaseKey = window.SUPABASE_CONFIG.key;
+                    
+                    if (typeof supabase !== 'undefined') {
+                        self.supabaseClient = supabase.createClient(self.supabaseUrl, self.supabaseKey);
+                        console.log('Supabase client initialized successfully');
+                        self.checkSession();
+                    } else {
+                        console.error('Supabase library not loaded');
+                    }
+                } catch (error) {
+                    console.error('Error initializing Supabase client:', error);
+                    console.error('Browser info:', navigator.userAgent);
+                    
+                    // Better error message for legacy browsers
+                    var errorMsg = 'Error connecting to cloud storage';
+                    if (error.message && error.message.indexOf('Promise') > -1) {
+                        errorMsg = 'Your browser may not support cloud features. Try updating your browser.';
+                    } else if (error.message) {
+                        errorMsg += ': ' + error.message;
+                    }
+                    
+                    self.showMessage(errorMsg, 'error');
+                }
+            } else {
+                console.error('Supabase configuration validation failed. URL:', window.SUPABASE_CONFIG.url, 'Key length:', window.SUPABASE_CONFIG.key.length);
+                self.showMessage('Cloud storage configuration invalid', 'error');
+            }
+        } else {
+            // Retry after a short delay
+            setTimeout(checkConfig, 100);
+        }
+    };
+    
+    checkConfig();
+};
+
+SupabaseAuth.prototype.checkBrowserCompatibility = function() {
+    var issues = [];
+    var userAgent = navigator.userAgent;
+    
+    console.log('Browser check - User Agent:', userAgent);
+    
+    // Check for very old Android browsers
+    if (userAgent.indexOf('Android') > -1) {
+        var androidMatch = userAgent.match(/Android (\d+)\.(\d+)/);
+        if (androidMatch) {
+            var androidVersion = parseFloat(androidMatch[1] + '.' + androidMatch[2]);
+            console.log('Android version detected:', androidVersion);
+            if (androidVersion < 5.0) {
+                issues.push('Android version ' + androidVersion + ' has limited cloud support');
+            }
+        }
+    }
+    
+    // Check for essential JavaScript features
+    if (typeof Promise === 'undefined') {
+        issues.push('Missing Promise support');
+    }
+    
+    if (typeof fetch === 'undefined') {
+        issues.push('Missing fetch API support');
+    }
+    
+    // Check for localStorage
+    try {
+        localStorage.setItem('test', 'test');
+        localStorage.removeItem('test');
+    } catch (e) {
+        issues.push('localStorage not available');
+    }
+    
+    if (issues.length > 0) {
+        console.warn('Browser compatibility issues detected:', issues);
+        this.showMessage('Limited cloud features available on this browser: ' + issues.join(', '), 'warning');
+    } else {
+        console.log('Browser compatibility check passed');
+    }
+    
+    return issues.length === 0;
+};
+
+SupabaseAuth.prototype.initializeAuthElements = function() {
+    this.authToggle = document.getElementById('authToggle');
+    this.authPanel = document.getElementById('authPanel');
+    this.toggleAuthPanel = document.getElementById('toggleAuthPanel');
+    this.authForm = document.getElementById('authForm');
+    this.fileManagement = document.getElementById('fileManagement');
+    this.authEmail = document.getElementById('authEmail');
+    this.authPassword = document.getElementById('authPassword');
+    this.signUpBtn = document.getElementById('signUpBtn');
+    this.loginBtn = document.getElementById('loginBtn');
+    this.logoutBtn = document.getElementById('logoutBtn');
+    this.authMsg = document.getElementById('authMsg');
+    this.userEmail = document.getElementById('userEmail');
+    this.fileUpload = document.getElementById('fileUpload');
+    this.uploadBtn = document.getElementById('uploadBtn');
+    this.userFileList = document.getElementById('userFileList');
+    this.uploadTypeInputs = document.getElementsByName('uploadType');
+    
+    // Create progress bar element
+    this.progressBar = this.createProgressBar();
+};
+
+SupabaseAuth.prototype.createProgressBar = function() {
+    var progressContainer = document.createElement('div');
+    progressContainer.className = 'upload-progress-container';
+    progressContainer.style.display = 'none';
+    progressContainer.style.marginTop = '10px';
+    
+    var progressBar = document.createElement('div');
+    progressBar.className = 'upload-progress-bar';
+    progressBar.style.width = '100%';
+    progressBar.style.height = '4px';
+    progressBar.style.backgroundColor = '#333';
+    progressBar.style.borderRadius = '2px';
+    progressBar.style.overflow = 'hidden';
+    
+    var progressFill = document.createElement('div');
+    progressFill.className = 'upload-progress-fill';
+    progressFill.style.width = '0%';
+    progressFill.style.height = '100%';
+    progressFill.style.backgroundColor = '#007acc';
+    progressFill.style.transition = 'width 0.3s ease';
+    progressFill.style.animation = 'progress-pulse 1.5s ease-in-out infinite';
+    
+    var progressText = document.createElement('div');
+    progressText.className = 'upload-progress-text';
+    progressText.style.fontSize = '0.8em';
+    progressText.style.color = '#ccc';
+    progressText.style.marginTop = '5px';
+    progressText.textContent = 'Uploading...';
+    
+    progressBar.appendChild(progressFill);
+    progressContainer.appendChild(progressBar);
+    progressContainer.appendChild(progressText);
+    
+    // Insert after upload button
+    var uploadBtn = document.getElementById('uploadBtn');
+    if (uploadBtn && uploadBtn.parentNode) {
+        uploadBtn.parentNode.insertBefore(progressContainer, uploadBtn.nextSibling);
+    }
+    
+    return {
+        container: progressContainer,
+        fill: progressFill,
+        text: progressText
+    };
+};
+
+SupabaseAuth.prototype.showUploadProgress = function(show) {
+    if (!this.progressBar) return;
+    
+    if (show) {
+        this.progressBar.container.style.display = 'block';
+        this.progressBar.fill.style.width = '0%';
+        this.progressBar.text.textContent = 'Uploading...';
+        
+        // Simulate progress since Supabase doesn't provide real progress
+        var progress = 0;
+        var self = this;
+        this.progressInterval = setInterval(function() {
+            progress += Math.random() * 15;
+            if (progress > 90) progress = 90;
+            self.progressBar.fill.style.width = progress + '%';
+        }, 200);
+    } else {
+        if (this.progressInterval) {
+            clearInterval(this.progressInterval);
+            this.progressInterval = null;
+        }
+        this.progressBar.fill.style.width = '100%';
+        this.progressBar.text.textContent = 'Complete!';
+        
+        var self = this;
+        setTimeout(function() {
+            if (self.progressBar) {
+                self.progressBar.container.style.display = 'none';
+            }
+        }, 1000);
+    }
+};
+
+SupabaseAuth.prototype.bindAuthEvents = function() {
+    var self = this;
+    
+    // Panel toggles
+    if (this.authToggle) {
+        addEvent(this.authToggle, 'click', function() {
+            self.toggleAuthPanelState();
+        });
+    }
+    if (this.toggleAuthPanel) {
+        addEvent(this.toggleAuthPanel, 'click', function() {
+            self.toggleAuthPanelState();
+        });
+    }
+    
+    // Auth buttons
+    if (this.signUpBtn) {
+        addEvent(this.signUpBtn, 'click', function() {
+            self.signUp();
+        });
+    }
+    if (this.loginBtn) {
+        addEvent(this.loginBtn, 'click', function() {
+            self.login();
+        });
+    }
+    if (this.logoutBtn) {
+        addEvent(this.logoutBtn, 'click', function() {
+            self.logout();
+        });
+    }
+    
+    // File upload
+    if (this.uploadBtn) {
+        addEvent(this.uploadBtn, 'click', function() {
+            self.uploadFile();
+        });
+    }
+};
+
+SupabaseAuth.prototype.toggleAuthPanelState = function() {
+    if (this.authPanel) {
+        toggleClass(this.authPanel, 'open');
+    }
+};
+
+SupabaseAuth.prototype.checkSession = function() {
+    var self = this;
+    if (!this.supabaseClient) return;
+    
+    this.supabaseClient.auth.getSession().then(function(response) {
+        if (response.data && response.data.session && response.data.session.user) {
+            self.currentUser = response.data.session.user;
+            self.showFileManagement();
+            self.loadUserFiles();
+        }
+    }).catch(function(error) {
+        console.error('Session check error:', error);
+    });
+};
+
+SupabaseAuth.prototype.signUp = function() {
+    var self = this;
+    var email = this.authEmail.value;
+    var password = this.authPassword.value;
+    
+    if (!email || !password) {
+        this.showMessage('Please fill in all fields', 'error');
+        return;
+    }
+    
+    if (!this.supabaseClient) {
+        this.showMessage('Supabase not initialized', 'error');
+        return;
+    }
+    
+    this.supabaseClient.auth.signUp({
+        email: email,
+        password: password
+    }).then(function(response) {
+        if (response.error) {
+            self.showMessage(response.error.message, 'error');
+        } else {
+            self.showMessage('Signup successful! Logging in automatically...', 'success');
+            // Auto login after signup
+            setTimeout(function() {
+                self.login();
+            }, 1000);
+        }
+    }).catch(function(error) {
+        self.showMessage('Signup failed: ' + error.message, 'error');
+    });
+};
+
+SupabaseAuth.prototype.login = function() {
+    var self = this;
+    var email = this.authEmail.value;
+    var password = this.authPassword.value;
+    
+    if (!email || !password) {
+        this.showMessage('Please fill in all fields', 'error');
+        return;
+    }
+    
+    if (!this.supabaseClient) {
+        this.showMessage('Supabase not initialized', 'error');
+        return;
+    }
+    
+    this.supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+    }).then(function(response) {
+        if (response.error) {
+            self.showMessage(response.error.message, 'error');
+        } else {
+            self.currentUser = response.data.user;
+            self.showMessage('Login successful!', 'success');
+            self.showFileManagement();
+            self.loadUserFiles();
+        }
+    }).catch(function(error) {
+        self.showMessage('Login failed: ' + error.message, 'error');
+    });
+};
+
+SupabaseAuth.prototype.logout = function() {
+    var self = this;
+    
+    if (!this.supabaseClient) return;
+    
+    this.supabaseClient.auth.signOut().then(function() {
+        self.currentUser = null;
+        self.userFiles = [];
+        self.showAuthForm();
+        self.showMessage('Logged out successfully', 'success');
+    }).catch(function(error) {
+        self.showMessage('Logout failed: ' + error.message, 'error');
+    });
+};
+
+SupabaseAuth.prototype.showMessage = function(message, type) {
+    if (this.authMsg) {
+        this.authMsg.textContent = message;
+        this.authMsg.className = 'auth-message ' + (type || '');
+        
+        // Clear message after 3 seconds
+        var self = this;
+        setTimeout(function() {
+            if (self.authMsg) {
+                self.authMsg.textContent = '';
+                self.authMsg.className = 'auth-message';
+            }
+        }, 3000);
+    }
+};
+
+SupabaseAuth.prototype.showFileManagement = function() {
+    if (this.authForm) {
+        this.authForm.style.display = 'none';
+    }
+    if (this.fileManagement) {
+        this.fileManagement.style.display = 'block';
+    }
+    if (this.userEmail && this.currentUser) {
+        this.userEmail.textContent = this.currentUser.email;
+    }
+};
+
+SupabaseAuth.prototype.showAuthForm = function() {
+    if (this.authForm) {
+        this.authForm.style.display = 'block';
+    }
+    if (this.fileManagement) {
+        this.fileManagement.style.display = 'none';
+    }
+    // Clear form
+    if (this.authEmail) this.authEmail.value = '';
+    if (this.authPassword) this.authPassword.value = '';
+};
+
+SupabaseAuth.prototype.getSelectedUploadType = function() {
+    for (var i = 0; i < this.uploadTypeInputs.length; i++) {
+        if (this.uploadTypeInputs[i].checked) {
+            return this.uploadTypeInputs[i].value;
+        }
+    }
+    return 'background';
+};
+
+SupabaseAuth.prototype.uploadFile = function() {
+    var self = this;
+    var file = this.fileUpload.files[0];
+    
+    console.log('=== UPLOAD DEBUG START ===');
+    console.log('File selected:', file ? file.name : 'NO FILE');
+    console.log('Current user:', this.currentUser ? this.currentUser.email : 'NO USER');
+    
+    if (!file || !this.currentUser) {
+        console.error('UPLOAD FAILED: No file or user not logged in');
+        this.showMessage('No file selected or user not logged in!', 'error');
+        return;
+    }
+    
+    if (!this.supabaseClient) {
+        console.error('UPLOAD FAILED: Supabase not initialized');
+        this.showMessage('Supabase not initialized', 'error');
+        return;
+    }
+    
+    // Simple file path - exactly like the working example
+    var filePath = this.currentUser.id + '/' + file.name;
+    
+    console.log('File path for upload:', filePath);
+    
+    // Show progress bar
+    this.showUploadProgress(true);
+    
+    console.log('Starting Supabase upload...');
+    this.supabaseClient.storage.from('userfiles').upload(filePath, file, { upsert: true })
+        .then(function(response) {
+            console.log('Upload response received:', response);
+            self.showUploadProgress(false);
+            
+            if (response.error) {
+                console.error('UPLOAD ERROR:', response.error);
+                self.showMessage('Upload error: ' + response.error.message, 'error');
+            } else {
+                console.log('UPLOAD SUCCESS:', response.data);
+                self.showMessage('File uploaded successfully!', 'success');
+                self.loadUserFiles();
+                // Clear file input
+                if (self.fileUpload) {
+                    self.fileUpload.value = '';
+                }
+            }
+            console.log('=== UPLOAD DEBUG END ===');
+        }).catch(function(error) {
+            console.error('UPLOAD CATCH ERROR:', error);
+            self.showUploadProgress(false);
+            self.showMessage('Upload failed: ' + error.message, 'error');
+            console.log('=== UPLOAD DEBUG END ===');
+        });
+};
+
+SupabaseAuth.prototype.loadUserFiles = function() {
+    var self = this;
+    
+    console.log('=== LOAD FILES DEBUG START ===');
+    console.log('Current user:', this.currentUser ? this.currentUser.email : 'NO USER');
+    
+    if (!this.currentUser || !this.supabaseClient) {
+        console.error('LOAD FILES FAILED: Missing user or supabase client');
+        return;
+    }
+    
+    // Use recursive listing to get all actual files, not just folders
+    var listPath = this.currentUser.id + '/';
+    console.log('Loading files from path:', listPath);
+    
+    this.supabaseClient.storage.from('userfiles').list(listPath, { recursive: true })
+        .then(function(response) {
+            console.log('Load files response:', response);
+            
+            if (response.error) {
+                console.error('LOAD FILES ERROR:', response.error);
+                return;
+            }
+            
+            console.log('Raw files from Supabase:', response.data);
+            console.log('Number of items:', response.data ? response.data.length : 0);
+            
+            // Filter to show only actual files (not folders)
+            var actualFiles = [];
+            for (var i = 0; i < (response.data || []).length; i++) {
+                var item = response.data[i];
+                console.log('Processing item:', item.name, 'Has metadata:', !!item.metadata);
+                
+                // Only include items that have metadata (actual files, not folders)
+                if (item.metadata && item.metadata.size > 0) {
+                    actualFiles.push(item);
+                    console.log('Added file:', item.name, 'Size:', item.metadata.size);
+                } else {
+                    console.log('Skipped folder/empty item:', item.name);
+                }
+            }
+            
+            console.log('Total actual files to display:', actualFiles.length);
+            self.userFiles = actualFiles;
+            self.displayUserFiles();
+            console.log('=== LOAD FILES DEBUG END ===');
+            
+        }).catch(function(error) {
+            console.error('LOAD FILES CATCH ERROR:', error);
+            console.log('=== LOAD FILES DEBUG END ===');
+        });
+};
+
+SupabaseAuth.prototype.displayUserFiles = function() {
+    var self = this;
+    
+    console.log('=== DISPLAY FILES DEBUG START ===');
+    console.log('Files to display:', this.userFiles ? this.userFiles.length : 0);
+    
+    if (!this.userFileList) {
+        console.error('DISPLAY FILES FAILED: User file list element not found');
+        return;
+    }
+    
+    this.userFileList.innerHTML = '';
+    
+    if (!this.userFiles || this.userFiles.length === 0) {
+        var noFilesMsg = document.createElement('div');
+        noFilesMsg.style.color = '#ccc';
+        noFilesMsg.style.textAlign = 'center';
+        noFilesMsg.style.padding = '20px';
+        noFilesMsg.textContent = 'No files uploaded yet.';
+        this.userFileList.appendChild(noFilesMsg);
+        console.log('No files to display');
+        console.log('=== DISPLAY FILES DEBUG END ===');
+        return;
+    }
+    
+    // Simple loop - exactly like working example
+    for (var i = 0; i < this.userFiles.length; i++) {
+        var file = this.userFiles[i];
+        console.log('Processing file for display:', file.name);
+        this.createFileItem(file);
+        console.log('Created file item for:', file.name);
+    }
+    
+    console.log('Total file items created:', this.userFileList.children.length);
+    console.log('=== DISPLAY FILES DEBUG END ===');
+};
+
+SupabaseAuth.prototype.createFileItem = function(file) {
+    var self = this;
+    var fileItem = document.createElement('div');
+    fileItem.className = 'file-item';
+    
+    var fileInfo = document.createElement('div');
+    fileInfo.className = 'file-info';
+    
+    // Display file name with category for better organization
+    var fileName = file.name.split('/').pop(); // Get just filename
+    var category = '';
+    if (file.name.indexOf('background/') !== -1) {
+        category = '[Background] ';
+    } else if (file.name.indexOf('livewallpaper/') !== -1) {
+        category = '[Live Wallpaper] ';
+    }
+    fileInfo.textContent = category + fileName;
+    
+    var fileActions = document.createElement('div');
+    fileActions.className = 'file-actions';
+    
+    var applyBtn = document.createElement('button');
+    applyBtn.className = 'file-action-btn apply';
+    applyBtn.textContent = 'Apply';
+    addEvent(applyBtn, 'click', function() {
+        self.applyFile(file);
+    });
+    
+    var deleteBtn = document.createElement('button');
+    deleteBtn.className = 'file-action-btn delete';
+    deleteBtn.textContent = 'Delete';
+    addEvent(deleteBtn, 'click', function() {
+        self.deleteFile(file);
+    });
+    
+    fileActions.appendChild(applyBtn);
+    fileActions.appendChild(deleteBtn);
+    
+    fileItem.appendChild(fileInfo);
+    fileItem.appendChild(fileActions);
+    
+    this.userFileList.appendChild(fileItem);
+};
+
+SupabaseAuth.prototype.applyFile = function(file) {
+    var self = this;
+    
+    console.log('=== APPLY FILE DEBUG START ===');
+    console.log('File to apply:', file);
+    console.log('File name:', file ? file.name : 'NO FILE NAME');
+    console.log('Current user:', this.currentUser ? this.currentUser.email : 'NO USER');
+    console.log('Supabase client:', this.supabaseClient ? 'CONNECTED' : 'NOT CONNECTED');
+    
+    if (!this.supabaseClient || !this.currentUser) {
+        console.error('APPLY FAILED: Missing supabase client or user');
+        this.showMessage('Not connected or not logged in', 'error');
+        return;
+    }
+    
+    // The file object from Supabase includes the full path with folder structure
+    var filePath = this.currentUser.id + '/' + file.name;
+    console.log('File path for apply:', filePath);
+    
+    console.log('Getting signed URL...');
+    this.supabaseClient.storage.from('userfiles').createSignedUrl(filePath, 3600)
+        .then(function(response) {
+            console.log('Signed URL response:', response);
+            
+            if (response.error) {
+                console.error('SIGNED URL ERROR:', response.error);
+                console.error('Error details:', JSON.stringify(response.error, null, 2));
+                self.showMessage('Error getting file URL: ' + response.error.message, 'error');
+                return;
+            }
+            
+            var fileUrl = response.data.signedUrl;
+            var fileName = file.name;
+            var isVideo = fileName.toLowerCase().match(/\.(mp4|webm|ogg|avi|mov)$/i);
+            var isImage = fileName.toLowerCase().match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i);
+            var isGif = fileName.toLowerCase().match(/\.gif$/i);
+            
+            console.log('File URL:', fileUrl);
+            console.log('File name extracted:', fileName);
+            console.log('Is video:', !!isVideo);
+            console.log('Is image:', !!isImage);
+            console.log('Is GIF:', !!isGif);
+            
+            // Simple logic: videos and gifs = live wallpaper, images = background
+            if (isVideo || isGif) {
+                console.log('Applying as live wallpaper');
+                // Store file info for auto-renewal
+                self.currentLiveWallpaperFile = file;
+                self.applyAsLiveWallpaper(fileUrl, fileName);
+                // Set up auto-renewal for live wallpaper
+                self.setupUrlAutoRenewal(file, 'livewallpaper');
+            } else if (isImage) {
+                console.log('Applying as background image');
+                // Store file info for auto-renewal
+                self.currentBackgroundFile = file;
+                self.applyAsBackground(fileUrl);
+                // Set up auto-renewal for background image
+                self.setupUrlAutoRenewal(file, 'background');
+            } else {
+                console.error('APPLY FAILED: Unsupported file type');
+                self.showMessage('Unsupported file type', 'error');
+            }
+            console.log('=== APPLY FILE DEBUG END ===');
+        }).catch(function(error) {
+            console.error('APPLY CATCH ERROR:', error);
+            console.error('Error stack:', error.stack);
+            self.showMessage('Error applying file: ' + error.message, 'error');
+            console.log('=== APPLY FILE DEBUG END ===');
+        });
+};
+
+SupabaseAuth.prototype.applyAsBackground = function(imageUrl) {
+    // Apply as background image through the existing clock system
+    if (window.digitalClock) {
+        window.digitalClock.settings.backgroundType = 'image';
+        window.digitalClock.settings.customBackground = imageUrl;
+        window.digitalClock.customImageUrl = imageUrl;
+        window.digitalClock.applyBackground();
+        
+        // Update the radio button
+        var imageRadio = document.querySelector('input[name="bgType"][value="image"]');
+        if (imageRadio) {
+            imageRadio.checked = true;
+        }
+        
+        this.showMessage('Background applied successfully!', 'success');
+    }
+};
+
+SupabaseAuth.prototype.applyAsLiveWallpaper = function(videoUrl, fileName) {
+    // Apply as live wallpaper through the existing clock system
+    if (window.digitalClock) {
+        window.digitalClock.settings.backgroundType = 'live';
+        window.digitalClock.settings.customLiveWallpaper = videoUrl;
+        window.digitalClock.applyBackground();
+        
+        // Update the radio button
+        var liveRadio = document.querySelector('input[name="bgType"][value="live"]');
+        if (liveRadio) {
+            liveRadio.checked = true;
+        }
+        
+        this.showMessage('Live wallpaper applied: ' + fileName, 'success');
+    }
+};
+
+SupabaseAuth.prototype.deleteFile = function(file) {
+    var self = this;
+    
+    console.log('=== DELETE FILE DEBUG START ===');
+    console.log('File to delete:', file);
+    console.log('Current user:', this.currentUser ? this.currentUser.email : 'NO USER');
+    
+    if (!this.supabaseClient || !this.currentUser) {
+        console.error('DELETE FAILED: Missing supabase client or user');
+        this.showMessage('Not connected or not logged in', 'error');
+        return;
+    }
+    
+    // Simple file path - exactly like working example and upload method
+    var filePath = this.currentUser.id + '/' + file.name;
+    console.log('File path for delete:', filePath);
+    
+    if (confirm('Are you sure you want to delete ' + file.name + '?')) {
+        console.log('User confirmed deletion, proceeding...');
+        console.log('Attempting to delete file at path:', filePath);
+        
+        this.supabaseClient.storage.from('userfiles').remove([filePath])
+            .then(function(response) {
+                console.log('Delete response received:', response);
+                
+                if (response.error) {
+                    console.error('DELETE ERROR:', response.error);
+                    console.error('Full error details:', JSON.stringify(response.error, null, 2));
+                    self.showMessage('Delete error: ' + response.error.message, 'error');
+                } else {
+                    console.log('DELETE SUCCESS - response data:', response.data);
+                    self.showMessage('File deleted successfully!', 'success');
+                    console.log('Reloading file list...');
+                    self.loadUserFiles();
+                }
+                console.log('=== DELETE FILE DEBUG END ===');
+            }).catch(function(error) {
+                console.error('DELETE CATCH ERROR:', error);
+                console.error('Error message:', error.message);
+                console.error('Error stack:', error.stack);
+                self.showMessage('Delete failed: ' + error.message, 'error');
+                console.log('=== DELETE FILE DEBUG END ===');
+            });
+    } else {
+        console.log('User cancelled deletion');
+        console.log('=== DELETE FILE DEBUG END ===');
+    }
+};
+
+SupabaseAuth.prototype.setupUrlAutoRenewal = function(file, type) {
+    var self = this;
+    
+    // Clear any existing renewal timer
+    if (this.urlRenewalTimer) {
+        clearTimeout(this.urlRenewalTimer);
+    }
+    
+    // Set timer to renew URL 5 minutes before expiry (55 minutes)
+    this.urlRenewalTimer = setTimeout(function() {
+        console.log('Auto-renewing expired URL for:', file.name);
+        self.renewCurrentWallpaperUrl(file, type);
+    }, 55 * 60 * 1000); // 55 minutes
+    
+    console.log('URL auto-renewal set up for:', file.name, 'Type:', type);
+};
+
+SupabaseAuth.prototype.renewCurrentWallpaperUrl = function(file, type) {
+    var self = this;
+    
+    if (!this.supabaseClient || !this.currentUser) {
+        console.error('Cannot renew URL: Missing client or user');
+        return;
+    }
+    
+    var filePath = this.currentUser.id + '/' + file.name;
+    console.log('Renewing URL for:', filePath);
+    
+    this.supabaseClient.storage.from('userfiles').createSignedUrl(filePath, 3600)
+        .then(function(response) {
+            if (response.error) {
+                console.error('URL renewal failed:', response.error);
+                return;
+            }
+            
+            var newUrl = response.data.signedUrl;
+            console.log('URL renewed successfully for:', file.name);
+            
+            if (type === 'livewallpaper' && window.digitalClock) {
+                // Update live wallpaper with new URL
+                window.digitalClock.settings.customLiveWallpaper = newUrl;
+                if (window.digitalClock.liveWallpaperCanvas) {
+                    window.digitalClock.liveWallpaperCanvas.src = newUrl;
+                }
+            } else if (type === 'background' && window.digitalClock) {
+                // Update background with new URL
+                window.digitalClock.settings.customBackground = newUrl;
+                window.digitalClock.customImageUrl = newUrl;
+                document.body.style.backgroundImage = 'url(' + newUrl + ')';
+            }
+            
+            // Set up next renewal
+            self.setupUrlAutoRenewal(file, type);
+            
+        }).catch(function(error) {
+            console.error('URL renewal error:', error);
+            // Retry renewal in 5 minutes if failed
+            setTimeout(function() {
+                self.renewCurrentWallpaperUrl(file, type);
+            }, 5 * 60 * 1000);
+        });
+};
+
 // Initialize the Digital Clock when the script loads
 var digitalClock = new DigitalClock();
+var supabaseAuth = new SupabaseAuth();

@@ -125,10 +125,10 @@ DigitalClock.prototype.initializeElements = function() {
     this.settingsToggle = document.getElementById('settingsToggle');
     this.togglePanel = document.getElementById('togglePanel');
     
-    // Control elements - using getElementsByClassName for better compatibility
-    this.formatButtons = this.getElementsFromClass('format-btn');
-    this.styleButtons = this.getElementsFromClass('style-btn');
-    this.backgroundTypeInputs = document.getElementsByName('bgType');
+    // New settings elements
+    this.timeFormatToggle = document.getElementById('timeFormatToggle');
+    this.styleSelect = document.getElementById('styleSelect');
+    this.backgroundTypeSelect = document.getElementById('backgroundType');
     this.solidColorInput = document.getElementById('solidColor');
     this.gradientColor1Input = document.getElementById('gradientColor1');
     this.gradientColor2Input = document.getElementById('gradientColor2');
@@ -144,8 +144,15 @@ DigitalClock.prototype.initializeElements = function() {
     this.resetButton = document.getElementById('resetSettings');
     this.fullscreenButton = document.getElementById('fullscreenBtn');
     
-    // Ensure settings toggle visibility for older Android browsers
-    this.ensureSettingsToggleCompatibility();
+    // Section headers for collapsible functionality
+    this.sectionHeaders = this.getElementsFromClass('section-header');
+    
+    // Background control sections
+    this.solidControls = document.getElementById('solidControls');
+    this.gradientControls = document.getElementById('gradientControls');
+    this.imageControls = document.getElementById('imageControls');
+    this.presetControls = document.getElementById('presetControls');
+    this.liveControls = document.getElementById('liveControls');
 };
 
 DigitalClock.prototype.getElementsFromClass = function(className) {
@@ -159,43 +166,6 @@ DigitalClock.prototype.getElementsFromClass = function(className) {
     return elements;
 };
 
-// Ensure settings toggle compatibility for older Android browsers
-DigitalClock.prototype.ensureSettingsToggleCompatibility = function() {
-    if (this.settingsToggle) {
-        // Add fallback text if emoji isn't supported on older Android
-        var userAgent = navigator.userAgent;
-        var isOldAndroid = userAgent.indexOf('Android') > -1;
-        
-        if (isOldAndroid) {
-            var androidMatch = userAgent.match(/Android (\d+)\.(\d+)/);
-            if (androidMatch) {
-                var androidVersion = parseFloat(androidMatch[1] + '.' + androidMatch[2]);
-                if (androidVersion < 5.0) {
-                    // For Android 4.x, use text fallback instead of emoji
-                    this.settingsToggle.innerHTML = 'SET';
-                    this.settingsToggle.style.fontSize = '0.9em';
-                    this.settingsToggle.style.fontWeight = 'bold';
-                    console.log('Applied Android 4 fallback for settings toggle');
-                }
-            }
-        }
-        
-        // Add touch event handlers for better compatibility
-        var self = this;
-        addEvent(this.settingsToggle, 'touchstart', function(e) {
-            e.preventDefault();
-            self.toggleCustomPanel();
-        });
-        
-        // Ensure click events work properly on older browsers
-        addEvent(this.settingsToggle, 'mousedown', function(e) {
-            if (e.type === 'mousedown') {
-                self.toggleCustomPanel();
-            }
-        });
-    }
-};
-
 DigitalClock.prototype.bindEvents = function() {
     var self = this;
     
@@ -207,26 +177,36 @@ DigitalClock.prototype.bindEvents = function() {
         self.toggleCustomPanel();
     });
     
-    // Format buttons
-    for (var i = 0; i < this.formatButtons.length; i++) {
-        addEvent(this.formatButtons[i], 'click', function(e) {
-            var format = this.getAttribute('data-format');
+    // Collapsible sections
+    for (var i = 0; i < this.sectionHeaders.length; i++) {
+        if (this.sectionHeaders[i].getAttribute('data-section') === 'account' || 
+            this.sectionHeaders[i].getAttribute('data-section') === 'background') {
+            addEvent(this.sectionHeaders[i], 'click', function(e) {
+                self.toggleSection(this.getAttribute('data-section'));
+            });
+        }
+    }
+    
+    // Time format toggle
+    if (this.timeFormatToggle) {
+        addEvent(this.timeFormatToggle, 'change', function() {
+            var format = this.checked ? '24' : '12';
             self.setTimeFormat(format);
         });
     }
     
-    // Style buttons
-    for (var i = 0; i < this.styleButtons.length; i++) {
-        addEvent(this.styleButtons[i], 'click', function(e) {
-            var style = this.getAttribute('data-style');
-            self.setTimeStyle(style);
+    // Style dropdown
+    if (this.styleSelect) {
+        addEvent(this.styleSelect, 'change', function() {
+            self.setTimeStyle(this.value);
         });
     }
     
-    // Background type selection
-    for (var i = 0; i < this.backgroundTypeInputs.length; i++) {
-        addEvent(this.backgroundTypeInputs[i], 'change', function(e) {
+    // Background type dropdown
+    if (this.backgroundTypeSelect) {
+        addEvent(this.backgroundTypeSelect, 'change', function() {
             self.setBackgroundType(this.value);
+            self.showBackgroundControls(this.value);
         });
     }
     
@@ -295,13 +275,163 @@ DigitalClock.prototype.bindEvents = function() {
     }
 };
 
+
+DigitalClock.prototype.startClock = function() {
+    var self = this;
+    this.clockInterval = setInterval(function() {
+        self.updateClock();
+    }, 1000);
+};
+
+DigitalClock.prototype.toggleCustomPanel = function() {
+    toggleClass(this.customPanel, 'open');
+};
+
+// New function to handle collapsible sections
+DigitalClock.prototype.toggleSection = function(sectionName) {
+    var contentId = sectionName + 'Content';
+    var content = document.getElementById(contentId);
+    var header = document.querySelector('[data-section="' + sectionName + '"]');
+    var arrow = header ? header.querySelector('.section-arrow') : null;
+    
+    if (content) {
+        if (content.style.display === 'none' || content.style.display === '') {
+            content.style.display = 'block';
+            if (arrow) addClass(arrow, 'expanded');
+        } else {
+            content.style.display = 'none';
+            if (arrow) removeClass(arrow, 'expanded');
+        }
+    }
+};
+
+// New function to show/hide background controls based on type
+DigitalClock.prototype.showBackgroundControls = function(type) {
+    // Hide all controls first
+    if (this.solidControls) this.solidControls.style.display = 'none';
+    if (this.gradientControls) this.gradientControls.style.display = 'none';
+    if (this.imageControls) this.imageControls.style.display = 'none';
+    if (this.presetControls) this.presetControls.style.display = 'none';
+    if (this.liveControls) this.liveControls.style.display = 'none';
+    
+    // Show the relevant control
+    switch(type) {
+        case 'solid':
+            if (this.solidControls) this.solidControls.style.display = 'block';
+            break;
+        case 'gradient':
+            if (this.gradientControls) this.gradientControls.style.display = 'block';
+            break;
+        case 'image':
+            if (this.imageControls) this.imageControls.style.display = 'block';
+            break;
+        case 'preset':
+            if (this.presetControls) this.presetControls.style.display = 'block';
+            break;
+        case 'live':
+            if (this.liveControls) this.liveControls.style.display = 'block';
+            break;
+    }
+};
+
+DigitalClock.prototype.setTimeFormat = function(format) {
+    this.settings.timeFormat = format;
+    // Update toggle switch state
+    if (this.timeFormatToggle) {
+        this.timeFormatToggle.checked = (format === '24');
+    }
+    this.updateClock();
+};
+
+DigitalClock.prototype.setTimeStyle = function(style) {
+    this.settings.timeStyle = style;
+    // Update dropdown selection
+    if (this.styleSelect) {
+        this.styleSelect.value = style;
+    }
+    
+    if (style === 'flip') {
+        // Handle flip clock style
+        this.initFlipClock();
+    } else {
+        // Handle regular digital clock styles
+        this.removeFlipClock();
+        
+        // Remove all style classes
+        this.timeDisplay.className = 'time-display';
+        
+        // Add new style class
+        if (style !== 'digital') {
+            addClass(this.timeDisplay, style);
+        }
+        
+        // Make sure digital clock is visible
+        this.timeDisplay.style.display = 'block';
+        if (this.dateElement) {
+            this.dateElement.style.display = 'block';
+        }
+    }
+};
+
+DigitalClock.prototype.initFlipClock = function() {
+    // Remove existing flip clock if any
+    this.removeFlipClock();
+    
+    // Hide the regular digital clock display
+    this.timeDisplay.style.display = 'none';
+    
+    // Create and add flip clock - insert it before the date element
+    this.flipClock = new FlipClock();
+    this.clockContainer.insertBefore(this.flipClock.el, this.dateElement);
+    
+    // Show the date element below the flip clock
+    if (this.dateElement) {
+        this.dateElement.style.display = 'block';
+    }
+    
+    // Update flip clock with current time
+    this.flipClock.updateTime();
+};
+
+DigitalClock.prototype.removeFlipClock = function() {
+    if (this.flipClock && this.flipClock.el && this.flipClock.el.parentNode) {
+        this.flipClock.el.parentNode.removeChild(this.flipClock.el);
+        this.flipClock = null;
+    }
+};
+
 DigitalClock.prototype.updateClock = function() {
     var now = new Date();
     var hours = now.getHours();
     var minutes = now.getMinutes();
     var seconds = now.getSeconds();
     
-    // Format time based on settings
+    // Update flip clock if active
+    if (this.settings.timeStyle === 'flip' && this.flipClock) {
+        this.flipClock.updateTime();
+        
+        // Update date for flip clock - ensure it appears below
+        var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        var months = ['January', 'February', 'March', 'April', 'May', 'June',
+                      'July', 'August', 'September', 'October', 'November', 'December'];
+        
+        var dayName = days[now.getDay()];
+        var monthName = months[now.getMonth()];
+        var date = now.getDate();
+        var year = now.getFullYear();
+        
+        this.dateElement.textContent = dayName + ', ' + monthName + ' ' + date + ', ' + year;
+        this.dateElement.style.display = 'block';
+        
+        // Ensure date appears after flip clock
+        if (this.flipClock.el.nextSibling !== this.dateElement) {
+            this.clockContainer.appendChild(this.dateElement);
+        }
+        
+        return;
+    }
+    
+    // Format time based on settings for regular digital clock
     if (this.settings.timeFormat === '12') {
         var ampm = hours >= 12 ? 'PM' : 'AM';
         hours = hours % 12;
@@ -330,38 +460,12 @@ DigitalClock.prototype.updateClock = function() {
     this.dateElement.textContent = dayName + ', ' + monthName + ' ' + date + ', ' + year;
 };
 
-DigitalClock.prototype.startClock = function() {
-    var self = this;
-    this.clockInterval = setInterval(function() {
-        self.updateClock();
-    }, 1000);
-};
-
-DigitalClock.prototype.toggleCustomPanel = function() {
-    toggleClass(this.customPanel, 'open');
-};
-
-DigitalClock.prototype.setTimeFormat = function(format) {
-    this.settings.timeFormat = format;
-    this.updateActiveButton(this.formatButtons, 'data-format', format);
-    this.updateClock();
-};
-
-DigitalClock.prototype.setTimeStyle = function(style) {
-    this.settings.timeStyle = style;
-    this.updateActiveButton(this.styleButtons, 'data-style', style);
-    
-    // Remove all style classes
-    this.timeDisplay.className = 'time-display';
-    
-    // Add new style class
-    if (style !== 'digital') {
-        addClass(this.timeDisplay, style);
-    }
-};
-
 DigitalClock.prototype.setBackgroundType = function(type) {
     this.settings.backgroundType = type;
+    // Update dropdown selection
+    if (this.backgroundTypeSelect) {
+        this.backgroundTypeSelect.value = type;
+    }
     this.applyBackground();
 };
 
@@ -453,14 +557,9 @@ DigitalClock.prototype.applyBackground = function() {
         case 'image':
             if (this.settings.customBackground) {
                 backgroundStyle = 'url(' + this.settings.customBackground + ')';
-                
-                // Enhanced background properties with fallbacks for older Android
                 document.body.style.backgroundSize = 'cover';
                 document.body.style.backgroundPosition = 'center';
                 document.body.style.backgroundRepeat = 'no-repeat';
-                
-                // Add fallback for browsers that don't support background-size: cover
-                this.applyImageBackgroundFallback();
             }
             break;
         case 'preset':
@@ -563,19 +662,17 @@ DigitalClock.prototype.applyLoadedSettings = function() {
     this.setTimeStyle(this.settings.timeStyle);
     
     // Apply background type
-    var bgTypeRadio = document.querySelector('input[name="bgType"][value="' + this.settings.backgroundType + '"]');
-    if (bgTypeRadio) {
-        bgTypeRadio.checked = true;
-    }
+    this.setBackgroundType(this.settings.backgroundType);
+    this.showBackgroundControls(this.settings.backgroundType);
     
     // Apply colors
-    this.solidColorInput.value = this.settings.solidColor;
-    this.gradientColor1Input.value = this.settings.gradientColor1;
-    this.gradientColor2Input.value = this.settings.gradientColor2;
-    this.fontColorInput.value = this.settings.fontColor;
+    if (this.solidColorInput) this.solidColorInput.value = this.settings.solidColor;
+    if (this.gradientColor1Input) this.gradientColor1Input.value = this.settings.gradientColor1;
+    if (this.gradientColor2Input) this.gradientColor2Input.value = this.settings.gradientColor2;
+    if (this.fontColorInput) this.fontColorInput.value = this.settings.fontColor;
     
     // Apply live wallpaper selection
-    if (this.settings.liveWallpaperType) {
+    if (this.settings.liveWallpaperType && this.liveWallpaperSelect) {
         this.liveWallpaperSelect.value = this.settings.liveWallpaperType;
     }
     
@@ -845,10 +942,7 @@ DigitalClock.prototype.createCustomLiveWallpaper = function() {
     this.liveWallpaperCanvas.style.left = '0';
     this.liveWallpaperCanvas.style.width = '100%';
     this.liveWallpaperCanvas.style.height = '100%';
-    
-    // CSS object-fit with fallback for older Android browsers
     this.liveWallpaperCanvas.style.objectFit = 'cover';
-    
     this.liveWallpaperCanvas.style.zIndex = '-1';
     this.liveWallpaperCanvas.style.pointerEvents = 'none';
     
@@ -861,164 +955,17 @@ DigitalClock.prototype.createCustomLiveWallpaper = function() {
     this.liveWallpaperCanvas.setAttribute('playsinline', 'true');
     this.liveWallpaperCanvas.setAttribute('webkit-playsinline', 'true'); // iOS compatibility
     
-    // Performance optimizations and Android 4 fallback
+    // Performance optimizations
     var self = this;
     this.liveWallpaperCanvas.addEventListener('loadeddata', function() {
         console.log('Live wallpaper video loaded and cached');
-        // Apply fallback scaling for older Android devices
-        self.applyVideoScalingFallback(self.liveWallpaperCanvas);
     });
     
     this.liveWallpaperCanvas.addEventListener('error', function(e) {
         console.error('Live wallpaper video error:', e);
     });
     
-    // Add resize listener for proper scaling on orientation change (Android specific)
-    addEvent(window, 'resize', function() {
-        if (self.liveWallpaperCanvas) {
-            self.applyVideoScalingFallback(self.liveWallpaperCanvas);
-        }
-    });
-    
     document.body.appendChild(this.liveWallpaperCanvas);
-};
-
-// Fallback video scaling for older Android devices that don't support object-fit
-DigitalClock.prototype.applyVideoScalingFallback = function(video) {
-    // Check if object-fit is supported
-    if (!('objectFit' in document.documentElement.style)) {
-        console.log('Object-fit not supported, applying manual scaling fallback');
-        
-        // Get container and video dimensions
-        var containerWidth = window.innerWidth;
-        var containerHeight = window.innerHeight;
-        
-        // Wait for video metadata to load
-        if (video.videoWidth && video.videoHeight) {
-            this.scaleVideoManually(video, containerWidth, containerHeight);
-        } else {
-            var self = this;
-            video.addEventListener('loadedmetadata', function() {
-                self.scaleVideoManually(video, containerWidth, containerHeight);
-            });
-        }
-    }
-};
-
-// Manual video scaling calculation for Android 4 and older browsers
-DigitalClock.prototype.scaleVideoManually = function(video, containerWidth, containerHeight) {
-    var videoWidth = video.videoWidth;
-    var videoHeight = video.videoHeight;
-    
-    if (!videoWidth || !videoHeight) return;
-    
-    // Calculate scale to cover the container (similar to object-fit: cover)
-    var scaleX = containerWidth / videoWidth;
-    var scaleY = containerHeight / videoHeight;
-    var scale = Math.max(scaleX, scaleY);
-    
-    // Calculate new dimensions
-    var newWidth = videoWidth * scale;
-    var newHeight = videoHeight * scale;
-    
-    // Calculate centering offsets
-    var offsetX = (containerWidth - newWidth) / 2;
-    var offsetY = (containerHeight - newHeight) / 2;
-    
-    // Apply the calculated styles
-    video.style.width = newWidth + 'px';
-    video.style.height = newHeight + 'px';
-    video.style.left = offsetX + 'px';
-    video.style.top = offsetY + 'px';
-    
-    console.log('Applied manual video scaling:', {
-        original: videoWidth + 'x' + videoHeight,
-        scaled: newWidth + 'x' + newHeight,
-        container: containerWidth + 'x' + containerHeight
-    });
-};
-
-// Fallback for image background scaling on older Android browsers
-DigitalClock.prototype.applyImageBackgroundFallback = function() {
-    // Check if background-size is supported
-    var testElement = document.createElement('div');
-    var backgroundSizeSupported = (
-        'backgroundSize' in testElement.style ||
-        'WebkitBackgroundSize' in testElement.style ||
-        'MozBackgroundSize' in testElement.style
-    );
-    
-    if (!backgroundSizeSupported) {
-        console.log('Background-size not supported, applying fallback');
-        
-        // For older browsers, create a full-screen background image element
-        var existingBg = document.getElementById('fallback-bg-image');
-        if (existingBg) {
-            existingBg.parentNode.removeChild(existingBg);
-        }
-        
-        var bgImage = document.createElement('img');
-        bgImage.id = 'fallback-bg-image';
-        bgImage.src = this.settings.customBackground;
-        bgImage.style.position = 'fixed';
-        bgImage.style.top = '0';
-        bgImage.style.left = '0';
-        bgImage.style.width = '100%';
-        bgImage.style.height = '100%';
-        bgImage.style.zIndex = '-10';
-        bgImage.style.pointerEvents = 'none';
-        
-        // Apply manual scaling similar to background-size: cover
-        var self = this;
-        bgImage.onload = function() {
-            self.scaleImageManually(bgImage, window.innerWidth, window.innerHeight);
-        };
-        
-        // Add resize listener for proper scaling
-        addEvent(window, 'resize', function() {
-            if (bgImage && bgImage.parentNode) {
-                self.scaleImageManually(bgImage, window.innerWidth, window.innerHeight);
-            }
-        });
-        
-        document.body.appendChild(bgImage);
-        
-        // Remove the background image from body to avoid duplication
-        document.body.style.backgroundImage = 'none';
-    }
-};
-
-// Manual image scaling for older browsers
-DigitalClock.prototype.scaleImageManually = function(img, containerWidth, containerHeight) {
-    var imgWidth = img.naturalWidth || img.width;
-    var imgHeight = img.naturalHeight || img.height;
-    
-    if (!imgWidth || !imgHeight) return;
-    
-    // Calculate scale to cover the container (similar to background-size: cover)
-    var scaleX = containerWidth / imgWidth;
-    var scaleY = containerHeight / imgHeight;
-    var scale = Math.max(scaleX, scaleY);
-    
-    // Calculate new dimensions
-    var newWidth = imgWidth * scale;
-    var newHeight = imgHeight * scale;
-    
-    // Calculate centering offsets
-    var offsetX = (containerWidth - newWidth) / 2;
-    var offsetY = (containerHeight - newHeight) / 2;
-    
-    // Apply the calculated styles
-    img.style.width = newWidth + 'px';
-    img.style.height = newHeight + 'px';
-    img.style.left = offsetX + 'px';
-    img.style.top = offsetY + 'px';
-    
-    console.log('Applied manual image scaling:', {
-        original: imgWidth + 'x' + imgHeight,
-        scaled: newWidth + 'x' + newHeight,
-        container: containerWidth + 'x' + containerHeight
-    });
 };
 
 // Simple Matrix Rain Animation
@@ -1230,46 +1177,16 @@ SupabaseAuth.prototype.init = function() {
     this.initSupabaseClient();
 };
 
-// Add polyfills for older browsers
-if (!String.prototype.startsWith) {
-    String.prototype.startsWith = function(searchString, position) {
-        position = position || 0;
-        return this.substr(position, searchString.length) === searchString;
-    };
-}
-
-if (!String.prototype.includes) {
-    String.prototype.includes = function(search, start) {
-        'use strict';
-        if (typeof start !== 'number') {
-            start = 0;
-        }
-        
-        if (start + search.length > this.length) {
-            return false;
-        } else {
-            return this.indexOf(search, start) !== -1;
-        }
-    };
-}
-
 SupabaseAuth.prototype.initSupabaseClient = function() {
     var self = this;
-    
-    // Enhanced browser compatibility check
-    this.checkBrowserCompatibility();
     
     // Wait for SUPABASE_CONFIG to be available
     var checkConfig = function() {
         if (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url && window.SUPABASE_CONFIG.key) {
             console.log('Supabase config found:', window.SUPABASE_CONFIG.url.substring(0, 20) + '...');
             // Check if URL is valid before creating client
-            // Legacy browser compatible URL validation
-            var urlValid = window.SUPABASE_CONFIG.url !== 'PLACEHOLDER_URL' && window.SUPABASE_CONFIG.key !== 'PLACEHOLDER_KEY';
-            var httpsValid = window.SUPABASE_CONFIG.url.indexOf('https://') === 0;
-            var supabaseValid = window.SUPABASE_CONFIG.url.indexOf('supabase.co') > -1;
-            
-            if (urlValid && httpsValid && supabaseValid) {
+            if (window.SUPABASE_CONFIG.url !== 'PLACEHOLDER_URL' && window.SUPABASE_CONFIG.key !== 'PLACEHOLDER_KEY' && 
+                window.SUPABASE_CONFIG.url.startsWith('https://') && window.SUPABASE_CONFIG.url.includes('supabase.co')) {
                 try {
                     self.supabaseUrl = window.SUPABASE_CONFIG.url;
                     self.supabaseKey = window.SUPABASE_CONFIG.key;
@@ -1283,17 +1200,7 @@ SupabaseAuth.prototype.initSupabaseClient = function() {
                     }
                 } catch (error) {
                     console.error('Error initializing Supabase client:', error);
-                    console.error('Browser info:', navigator.userAgent);
-                    
-                    // Better error message for legacy browsers
-                    var errorMsg = 'Error connecting to cloud storage';
-                    if (error.message && error.message.indexOf('Promise') > -1) {
-                        errorMsg = 'Your browser may not support cloud features. Try updating your browser.';
-                    } else if (error.message) {
-                        errorMsg += ': ' + error.message;
-                    }
-                    
-                    self.showMessage(errorMsg, 'error');
+                    self.showMessage('Error connecting to cloud storage: ' + error.message, 'error');
                 }
             } else {
                 console.error('Supabase configuration validation failed. URL:', window.SUPABASE_CONFIG.url, 'Key length:', window.SUPABASE_CONFIG.key.length);
@@ -1308,55 +1215,8 @@ SupabaseAuth.prototype.initSupabaseClient = function() {
     checkConfig();
 };
 
-SupabaseAuth.prototype.checkBrowserCompatibility = function() {
-    var issues = [];
-    var userAgent = navigator.userAgent;
-    
-    console.log('Browser check - User Agent:', userAgent);
-    
-    // Check for very old Android browsers
-    if (userAgent.indexOf('Android') > -1) {
-        var androidMatch = userAgent.match(/Android (\d+)\.(\d+)/);
-        if (androidMatch) {
-            var androidVersion = parseFloat(androidMatch[1] + '.' + androidMatch[2]);
-            console.log('Android version detected:', androidVersion);
-            if (androidVersion < 5.0) {
-                issues.push('Android version ' + androidVersion + ' has limited cloud support');
-            }
-        }
-    }
-    
-    // Check for essential JavaScript features
-    if (typeof Promise === 'undefined') {
-        issues.push('Missing Promise support');
-    }
-    
-    if (typeof fetch === 'undefined') {
-        issues.push('Missing fetch API support');
-    }
-    
-    // Check for localStorage
-    try {
-        localStorage.setItem('test', 'test');
-        localStorage.removeItem('test');
-    } catch (e) {
-        issues.push('localStorage not available');
-    }
-    
-    if (issues.length > 0) {
-        console.warn('Browser compatibility issues detected:', issues);
-        this.showMessage('Limited cloud features available on this browser: ' + issues.join(', '), 'warning');
-    } else {
-        console.log('Browser compatibility check passed');
-    }
-    
-    return issues.length === 0;
-};
-
 SupabaseAuth.prototype.initializeAuthElements = function() {
-    this.authToggle = document.getElementById('authToggle');
-    this.authPanel = document.getElementById('authPanel');
-    this.toggleAuthPanel = document.getElementById('toggleAuthPanel');
+    // Auth elements are now in the settings panel
     this.authForm = document.getElementById('authForm');
     this.fileManagement = document.getElementById('fileManagement');
     this.authEmail = document.getElementById('authEmail');
@@ -1457,18 +1317,6 @@ SupabaseAuth.prototype.showUploadProgress = function(show) {
 SupabaseAuth.prototype.bindAuthEvents = function() {
     var self = this;
     
-    // Panel toggles
-    if (this.authToggle) {
-        addEvent(this.authToggle, 'click', function() {
-            self.toggleAuthPanelState();
-        });
-    }
-    if (this.toggleAuthPanel) {
-        addEvent(this.toggleAuthPanel, 'click', function() {
-            self.toggleAuthPanelState();
-        });
-    }
-    
     // Auth buttons
     if (this.signUpBtn) {
         addEvent(this.signUpBtn, 'click', function() {
@@ -1494,11 +1342,7 @@ SupabaseAuth.prototype.bindAuthEvents = function() {
     }
 };
 
-SupabaseAuth.prototype.toggleAuthPanelState = function() {
-    if (this.authPanel) {
-        toggleClass(this.authPanel, 'open');
-    }
-};
+// Auth panel toggle is no longer needed since auth is in settings panel
 
 SupabaseAuth.prototype.checkSession = function() {
     var self = this;
@@ -2049,6 +1893,87 @@ SupabaseAuth.prototype.renewCurrentWallpaperUrl = function(file, type) {
                 self.renewCurrentWallpaperUrl(file, type);
             }, 5 * 60 * 1000);
         });
+};
+
+// Flip Clock functionality
+function CountdownTracker(label, value){
+    var el = document.createElement('span');
+    
+    el.className = 'flip-clock__piece';
+    el.innerHTML = '<b class="flip-clock__card card"><b class="card__top"></b><b class="card__bottom"></b><b class="card__back"><b class="card__bottom"></b></b></b>' + 
+        '<span class="flip-clock__slot">' + label + '</span>';
+    
+    this.el = el;
+    
+    var top = el.querySelector('.card__top'),
+        bottom = el.querySelector('.card__bottom'),
+        back = el.querySelector('.card__back'),
+        backBottom = el.querySelector('.card__back .card__bottom');
+    
+    this.update = function(val){
+        val = ( '0' + val ).slice(-2);
+        if ( val !== this.currentValue ) {
+            
+            if ( this.currentValue >= 0 ) {
+                back.setAttribute('data-value', this.currentValue);
+                bottom.setAttribute('data-value', this.currentValue);
+            }
+            this.currentValue = val;
+            top.innerText = this.currentValue;
+            backBottom.setAttribute('data-value', this.currentValue);
+            
+            this.el.classList.remove('flip');
+            void this.el.offsetWidth;
+            this.el.classList.add('flip');
+        }
+    }
+    
+    this.update(value);
+}
+
+function FlipClock() {
+    this.el = document.createElement('div');
+    this.el.className = 'flip-clock';
+    
+    var trackers = {},
+        self = this;
+    
+    // Initialize with current time
+    var t = this.getTime();
+    
+    for ( var key in t ){
+        if ( key === 'Total' ) { continue; }
+        trackers[key] = new CountdownTracker(key, t[key]);
+        this.el.appendChild(trackers[key].el);
+    }
+    
+    this.trackers = trackers;
+    
+    this.updateTime = function() {
+        var t = self.getTime();
+        
+        for ( var key in trackers ){
+            trackers[key].update( t[key] );
+        }
+    };
+}
+
+FlipClock.prototype.getTime = function() {
+    var now = new Date();
+    var hours = now.getHours();
+    
+    // Check time format from digital clock settings
+    if (window.digitalClock && window.digitalClock.settings.timeFormat === '12') {
+        hours = hours % 12;
+        hours = hours ? hours : 12; // 0 should be 12
+    }
+    
+    return {
+        'Total': now,
+        'Hours': hours,
+        'Minutes': now.getMinutes(),
+        'Seconds': now.getSeconds()
+    };
 };
 
 // Initialize the Digital Clock when the script loads

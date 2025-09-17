@@ -47,59 +47,6 @@
     <!-- Settings Toggle Button -->
     <button id="settingsToggle" class="settings-toggle">⚙️</button>
     
-    <!-- Auth Toggle Button -->
-    <button id="authToggle" class="auth-toggle">👤</button>
-    
-    <!-- Authentication Panel -->
-    <div id="authPanel" class="auth-panel">
-        <div class="panel-header">
-            <h2 id="authTitle">Login / Signup</h2>
-            <button id="toggleAuthPanel" class="toggle-btn">×</button>
-        </div>
-        
-        <div id="authContent" class="auth-content">
-            <!-- Login/Signup Form -->
-            <div id="authForm" class="auth-form">
-                <input id="authEmail" type="email" placeholder="Email" class="auth-input">
-                <input id="authPassword" type="password" placeholder="Password" class="auth-input">
-                <div class="auth-buttons">
-                    <button id="signUpBtn" class="auth-btn signup">Sign Up</button>
-                    <button id="loginBtn" class="auth-btn login">Login</button>
-                </div>
-                <p id="authMsg" class="auth-message"></p>
-            </div>
-            
-            <!-- File Management (Hidden initially) -->
-            <div id="fileManagement" class="file-management" style="display:none;">
-                <div class="user-info">
-                    <p>Welcome, <span id="userEmail"></span>!</p>
-                    <button id="logoutBtn" class="auth-btn logout">Logout</button>
-                </div>
-                
-                <h3>Upload Files</h3>
-                <div class="upload-section">
-                    <div class="upload-type">
-                        <label>
-                            <input type="radio" name="uploadType" value="background" checked>
-                            Background Image
-                        </label>
-                    </div>
-                    <div class="upload-type">
-                        <label>
-                            <input type="radio" name="uploadType" value="livewallpaper">
-                            Live Wallpaper (Video/GIF)
-                        </label>
-                    </div>
-                    <input type="file" id="fileUpload" accept="image/*,video/*">
-                    <button id="uploadBtn" class="control-btn save">Upload File</button>
-                </div>
-                
-                <h3>Your Files</h3>
-                <div id="userFileList" class="user-file-list"></div>
-            </div>
-        </div>
-    </div>
-    
     <!-- Main Clock Container -->
     <div id="clockContainer" class="clock-container">
         <div id="timeDisplay" class="time-display">
@@ -109,106 +56,167 @@
         <div id="date" class="date-display">Loading...</div>
     </div>
 
-    <!-- Customization Panel -->
+    <!-- Settings Panel -->
     <div id="customPanel" class="custom-panel">
         <div class="panel-header">
-            <h2>Customization</h2>
+            <h2>Settings</h2>
             <button id="togglePanel" class="toggle-btn">×</button>
         </div>
         
         <div class="panel-content">
+            <!-- Account Section -->
+            <div class="settings-section">
+                <div class="section-header" data-section="account">
+                    <span class="section-icon">👤</span>
+                    <span class="section-title">Account</span>
+                    <span class="section-arrow">▶</span>
+                </div>
+                <div class="section-content" id="accountContent" style="display: none;">
+                    <!-- Authentication Form -->
+                    <div id="authForm" class="auth-form">
+                        <input id="authEmail" type="email" placeholder="Email" class="settings-input">
+                        <input id="authPassword" type="password" placeholder="Password" class="settings-input">
+                        <div class="auth-buttons">
+                            <button id="signUpBtn" class="settings-btn primary">Sign Up</button>
+                            <button id="loginBtn" class="settings-btn secondary">Login</button>
+                        </div>
+                        <p id="authMsg" class="auth-message"></p>
+                    </div>
+                    
+                    <!-- File Management (Hidden initially) -->
+                    <div id="fileManagement" class="file-management" style="display:none;">
+                        <div class="user-info">
+                            <p>Welcome, <span id="userEmail"></span>!</p>
+                            <button id="logoutBtn" class="settings-btn danger">Logout</button>
+                        </div>
+                        
+                        <div class="upload-section">
+                            <h4>Upload Files</h4>
+                            <div class="upload-type">
+                                <label class="toggle-label">
+                                    <input type="radio" name="uploadType" value="background" checked>
+                                    <span>Background Image</span>
+                                </label>
+                            </div>
+                            <div class="upload-type">
+                                <label class="toggle-label">
+                                    <input type="radio" name="uploadType" value="livewallpaper">
+                                    <span>Live Wallpaper</span>
+                                </label>
+                            </div>
+                            <input type="file" id="fileUpload" accept="image/*,video/*" class="file-input">
+                            <button id="uploadBtn" class="settings-btn primary">Upload</button>
+                        </div>
+                        
+                        <div id="userFileList" class="user-file-list"></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Time Format Section -->
-            <div class="section">
-                <h3>Time Format</h3>
-                <div class="format-options">
-                    <button class="format-btn active" data-format="12">12 Hour</button>
-                    <button class="format-btn" data-format="24">24 Hour</button>
+            <div class="settings-section">
+                <div class="section-header" data-section="time">
+                    <span class="section-icon">⏰</span>
+                    <span class="section-title">Time Format</span>
+                    <div class="section-toggle">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="timeFormatToggle">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="toggle-label">24H</span>
+                    </div>
                 </div>
             </div>
 
             <!-- Time Style Section -->
-            <div class="section">
-                <h3>Time Style</h3>
-                <div class="style-grid">
-                    <button class="style-btn active" data-style="digital">Digital</button>
-                    <button class="style-btn" data-style="elegant">Elegant</button>
-                    <button class="style-btn" data-style="neon">Neon</button>
-                    <button class="style-btn" data-style="classic">Classic</button>
-                    <button class="style-btn" data-style="modern">Modern</button>
-                    <button class="style-btn" data-style="retro">Retro</button>
+            <div class="settings-section">
+                <div class="section-header" data-section="style">
+                    <span class="section-icon">🎨</span>
+                    <span class="section-title">Style</span>
+                    <select id="styleSelect" class="settings-dropdown">
+                        <option value="digital">Digital</option>
+                        <option value="elegant">Elegant</option>
+                        <option value="neon">Neon</option>
+                        <option value="classic">Classic</option>
+                        <option value="modern">Modern</option>
+                        <option value="retro">Retro</option>
+                        <option value="flip">Flip Clock</option>
+                    </select>
                 </div>
             </div>
 
             <!-- Background Section -->
-            <div class="section">
-                <h3>Background</h3>
-                <div class="bg-options">
-                    <div class="bg-type">
-                        <label>
-                            <input type="radio" name="bgType" value="solid" checked>
-                            Solid Color
-                        </label>
-                        <input type="color" id="solidColor" value="#1a1a1a">
-                    </div>
-                    
-                    <div class="bg-type">
-                        <label>
-                            <input type="radio" name="bgType" value="gradient">
-                            Gradient
-                        </label>
-                        <div class="gradient-controls">
-                            <input type="color" id="gradientColor1" value="#1a1a1a">
-                            <input type="color" id="gradientColor2" value="#4a4a4a">
+            <div class="settings-section">
+                <div class="section-header" data-section="background">
+                    <span class="section-icon">🖼️</span>
+                    <span class="section-title">Background</span>
+                    <span class="section-arrow">▶</span>
+                </div>
+                <div class="section-content" id="backgroundContent" style="display: none;">
+                    <div class="background-options">
+                        <select id="backgroundType" class="settings-dropdown">
+                            <option value="solid">Solid Color</option>
+                            <option value="gradient">Gradient</option>
+                            <option value="image">Custom Image</option>
+                            <option value="preset">Preset</option>
+                            <option value="live">Live Wallpaper</option>
+                        </select>
+                        
+                        <div id="solidControls" class="bg-controls">
+                            <input type="color" id="solidColor" value="#1a1a1a" class="color-picker">
+                        </div>
+                        
+                        <div id="gradientControls" class="bg-controls" style="display: none;">
+                            <div class="gradient-row">
+                                <input type="color" id="gradientColor1" value="#1a1a1a" class="color-picker">
+                                <input type="color" id="gradientColor2" value="#4a4a4a" class="color-picker">
+                            </div>
+                        </div>
+                        
+                        <div id="imageControls" class="bg-controls" style="display: none;">
+                            <input type="file" id="imageUpload" accept="image/*" class="file-input">
+                        </div>
+                        
+                        <div id="presetControls" class="bg-controls" style="display: none;">
+                            <div class="preset-grid">
+                                <div class="preset-bg" data-bg="dark-gradient" style="background: linear-gradient(45deg, #1a1a1a, #2d2d30);"></div>
+                                <div class="preset-bg" data-bg="blue-gradient" style="background: linear-gradient(45deg, #0066cc, #004499);"></div>
+                                <div class="preset-bg" data-bg="purple-gradient" style="background: linear-gradient(45deg, #6a0dad, #4b0082);"></div>
+                                <div class="preset-bg" data-bg="green-gradient" style="background: linear-gradient(45deg, #2d5016, #3d7c47);"></div>
+                                <div class="preset-bg" data-bg="red-gradient" style="background: linear-gradient(45deg, #8b0000, #dc143c);"></div>
+                                <div class="preset-bg" data-bg="sunset" style="background: linear-gradient(45deg, #ff6b6b, #feca57);"></div>
+                            </div>
+                        </div>
+                        
+                        <div id="liveControls" class="bg-controls" style="display: none;">
+                            <select id="liveWallpaper" class="settings-dropdown">
+                                <option value="matrix">Matrix Rain</option>
+                                <option value="particles">Floating Particles</option>
+                                <option value="waves">Animated Waves</option>
+                                <option value="stars">Starfield</option>
+                                <option value="geometric">Geometric Patterns</option>
+                            </select>
+                            <input type="file" id="customLiveWallpaper" accept="video/*,image/gif" class="file-input">
                         </div>
                     </div>
-                    
-                    <div class="bg-type">
-                        <label>
-                            <input type="radio" name="bgType" value="image">
-                            Custom Image
-                        </label>
-                        <input type="file" id="imageUpload" accept="image/*">
-                    </div>
-                    
-                    <div class="bg-type">
-                        <label>
-                            <input type="radio" name="bgType" value="live">
-                            Live Wallpaper
-                        </label>
-                        <select id="liveWallpaper" class="live-wallpaper-select">
-                            <option value="matrix">Matrix Rain</option>
-                            <option value="particles">Floating Particles</option>
-                            <option value="waves">Animated Waves</option>
-                            <option value="stars">Starfield</option>
-                            <option value="geometric">Geometric Patterns</option>
-                        </select>
-                        <input type="file" id="customLiveWallpaper" accept="video/*,image/gif">
-                    </div>
-                </div>
-
-                <h4>Preset Backgrounds</h4>
-                <div class="preset-grid">
-                    <div class="preset-bg" data-bg="dark-gradient" style="background: linear-gradient(45deg, #1a1a1a, #2d2d30);"></div>
-                    <div class="preset-bg" data-bg="blue-gradient" style="background: linear-gradient(45deg, #0066cc, #004499);"></div>
-                    <div class="preset-bg" data-bg="purple-gradient" style="background: linear-gradient(45deg, #6a0dad, #4b0082);"></div>
-                    <div class="preset-bg" data-bg="green-gradient" style="background: linear-gradient(45deg, #2d5016, #3d7c47);"></div>
-                    <div class="preset-bg" data-bg="red-gradient" style="background: linear-gradient(45deg, #8b0000, #dc143c);"></div>
-                    <div class="preset-bg" data-bg="sunset" style="background: linear-gradient(45deg, #ff6b6b, #feca57);"></div>
                 </div>
             </div>
 
             <!-- Font Color Section -->
-            <div class="section">
-                <h3>Font Color</h3>
-                <input type="color" id="fontColor" value="#ffffff">
+            <div class="settings-section">
+                <div class="section-header" data-section="font">
+                    <span class="section-icon">🎯</span>
+                    <span class="section-title">Font Color</span>
+                    <input type="color" id="fontColor" value="#ffffff" class="color-picker-inline">
+                </div>
             </div>
 
-            <!-- Control Buttons -->
-            <div class="controls">
-                <button id="saveSettings" class="control-btn save">Save Settings</button>
-                <button id="loadSettings" class="control-btn load">Load Settings</button>
-                <button id="resetSettings" class="control-btn reset">Reset</button>
-                <button id="fullscreenBtn" class="control-btn fullscreen">Fullscreen</button>
+            <!-- Control Actions -->
+            <div class="settings-actions">
+                <button id="saveSettings" class="action-btn save">💾 Save</button>
+                <button id="loadSettings" class="action-btn load">📁 Load</button>
+                <button id="resetSettings" class="action-btn reset">🔄 Reset</button>
+                <button id="fullscreenBtn" class="action-btn fullscreen">⛶ Fullscreen</button>
             </div>
         </div>
     </div>

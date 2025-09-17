@@ -559,139 +559,461 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-/* Auth Toggle Button */
-.auth-toggle {
-    position: fixed;
-    top: 90px;
-    right: 20px;
-    width: 60px;
-    height: 60px;
-    background: rgba(0, 0, 0, 0.8);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    color: #ffffff;
-    font-size: 1.5em;
-    cursor: pointer;
-    -webkit-transition: all 0.3s ease;
-    -moz-transition: all 0.3s ease;
-    transition: all 0.3s ease;
-    z-index: 999;
+/* New Settings Panel Styles */
+.settings-section {
+    margin-bottom: 8px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    overflow: hidden;
 }
 
-.auth-toggle:hover {
-    background: rgba(0, 0, 0, 0.9);
-    border-color: #28a745;
+.section-header {
+    display: -webkit-flex;
+    display: -moz-flex;
+    display: flex;
+    -webkit-align-items: center;
+    -moz-align-items: center;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    -webkit-transition: all 0.2s ease;
+    -moz-transition: all 0.2s ease;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.section-header:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.section-icon {
+    font-size: 1.2em;
+    margin-right: 12px;
+    width: 24px;
+    text-align: center;
+}
+
+.section-title {
+    -webkit-flex: 1;
+    -moz-flex: 1;
+    flex: 1;
+    color: #ffffff;
+    font-weight: 500;
+    font-size: 0.95em;
+}
+
+.section-arrow {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.8em;
+    -webkit-transition: transform 0.2s ease;
+    -moz-transition: transform 0.2s ease;
+    transition: transform 0.2s ease;
+}
+
+.section-arrow.expanded {
+    -webkit-transform: rotate(90deg);
+    -moz-transform: rotate(90deg);
+    transform: rotate(90deg);
+}
+
+.section-content {
+    padding: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+/* Toggle Switch Styles */
+.section-toggle {
+    display: -webkit-flex;
+    display: -moz-flex;
+    display: flex;
+    -webkit-align-items: center;
+    -moz-align-items: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 26px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.2);
+    -webkit-transition: .4s;
+    -moz-transition: .4s;
+    transition: .4s;
+    border-radius: 26px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    -webkit-transition: .4s;
+    -moz-transition: .4s;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #007acc;
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(22px);
+    -moz-transform: translateX(22px);
+    -ms-transform: translateX(22px);
+    transform: translateX(22px);
+}
+
+.toggle-label {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.8em;
+    font-weight: 500;
+}
+
+/* Settings Dropdown */
+.settings-dropdown {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: #ffffff;
+    padding: 8px 12px;
+    font-size: 0.9em;
+    width: 140px;
+    cursor: pointer;
+    -webkit-transition: all 0.2s ease;
+    -moz-transition: all 0.2s ease;
+    transition: all 0.2s ease;
+}
+
+.settings-dropdown:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #007acc;
+}
+
+.settings-dropdown option {
+    background: #2a2a2a;
+    color: #ffffff;
+}
+
+/* Settings Input Styles */
+.settings-input {
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: #ffffff;
+    font-size: 0.9em;
+    width: 100%;
+    margin-bottom: 8px;
+    -webkit-transition: all 0.2s ease;
+    -moz-transition: all 0.2s ease;
+    transition: all 0.2s ease;
+}
+
+.settings-input:focus {
+    outline: none;
+    border-color: #007acc;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.settings-input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Color Picker Styles */
+.color-picker {
+    width: 40px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: none;
+    -webkit-transition: all 0.2s ease;
+    -moz-transition: all 0.2s ease;
+    transition: all 0.2s ease;
+}
+
+.color-picker:hover {
     -webkit-transform: scale(1.1);
     -moz-transform: scale(1.1);
     transform: scale(1.1);
 }
 
-/* Authentication Panel */
-.auth-panel {
-    position: fixed;
-    top: 20px;
-    left: -400px;
-    width: 380px;
-    height: 90vh;
-    background: rgba(0, 0, 0, 0.95);
-    border-radius: 0 15px 15px 0;
-    -webkit-transition: left 0.3s ease;
-    -moz-transition: left 0.3s ease;
-    transition: left 0.3s ease;
-    z-index: 1000;
-    overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
-    box-shadow: 5px 0 20px rgba(0, 0, 0, 0.5);
-}
-
-.auth-panel.open {
-    left: 0;
-}
-
-.auth-content {
-    padding: 20px;
-}
-
-.auth-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.auth-input {
-    padding: 12px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-    color: #ffffff;
-    font-size: 1em;
-}
-
-.auth-input::placeholder {
-    color: rgba(255, 255, 255, 0.6);
-}
-
-.auth-buttons {
-    display: flex;
-    gap: 10px;
-}
-
-.auth-btn {
-    flex: 1;
-    padding: 12px;
+.color-picker-inline {
+    width: 32px;
+    height: 24px;
     border: none;
-    border-radius: 8px;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 0.9em;
+    background: none;
+}
+
+/* File Input Styles */
+.file-input {
+    width: 100%;
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    padding: 6px 8px;
+    font-size: 0.8em;
+    margin-top: 8px;
+}
+
+/* Settings Buttons */
+.settings-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85em;
     font-weight: 500;
-    -webkit-transition: all 0.2s;
-    -moz-transition: all 0.2s;
-    transition: all 0.2s;
+    -webkit-transition: all 0.2s ease;
+    -moz-transition: all 0.2s ease;
+    transition: all 0.2s ease;
+    margin: 2px;
 }
 
-.auth-btn.signup {
-    background: #28a745;
-    color: white;
-}
-
-.auth-btn.login {
+.settings-btn.primary {
     background: #007acc;
     color: white;
 }
 
-.auth-btn.logout {
-    background: #dc3545;
-    color: white;
-    width: 100%;
-    margin-top: 10px;
+.settings-btn.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.auth-btn:hover {
+.settings-btn.danger {
+    background: #dc3545;
+    color: white;
+}
+
+.settings-btn:hover {
+    -webkit-transform: translateY(-1px);
+    -moz-transform: translateY(-1px);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Auth Form in Settings */
+.auth-form {
+    display: -webkit-flex;
+    display: -moz-flex;
+    display: flex;
+    -webkit-flex-direction: column;
+    -moz-flex-direction: column;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.auth-buttons {
+    display: -webkit-flex;
+    display: -moz-flex;
+    display: flex;
+    gap: 8px;
+}
+
+.auth-message {
+    color: #ffffff;
+    font-size: 0.8em;
+    text-align: center;
+    margin: 8px 0;
+    padding: 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.auth-message.error {
+    color: #ff6b6b;
+    background: rgba(220, 53, 69, 0.1);
+}
+
+.auth-message.success {
+    color: #28a745;
+    background: rgba(40, 167, 69, 0.1);
+}
+
+/* Background Controls */
+.background-options {
+    display: -webkit-flex;
+    display: -moz-flex;
+    display: flex;
+    -webkit-flex-direction: column;
+    -moz-flex-direction: column;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.bg-controls {
+    margin-top: 12px;
+}
+
+.gradient-row {
+    display: -webkit-flex;
+    display: -moz-flex;
+    display: flex;
+    gap: 12px;
+    -webkit-align-items: center;
+    -moz-align-items: center;
+    align-items: center;
+}
+
+/* Settings Actions */
+.settings-actions {
+    display: -webkit-grid;
+    display: -moz-grid;
+    display: grid;
+    -webkit-grid-template-columns: repeat(2, 1fr);
+    -moz-grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    -webkit-grid-gap: 8px;
+    -moz-grid-gap: 8px;
+    margin-top: 20px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+/* Fallback for older browsers */
+.settings-actions {
+    display: -webkit-flex;
+    display: -moz-flex;
+    display: flex;
+    -webkit-flex-wrap: wrap;
+    -moz-flex-wrap: wrap;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    padding: 10px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8em;
+    font-weight: 500;
+    -webkit-transition: all 0.2s ease;
+    -moz-transition: all 0.2s ease;
+    transition: all 0.2s ease;
+    display: -webkit-flex;
+    display: -moz-flex;
+    display: flex;
+    -webkit-align-items: center;
+    -moz-align-items: center;
+    align-items: center;
+    -webkit-justify-content: center;
+    -moz-justify-content: center;
+    justify-content: center;
+    gap: 4px;
+    width: 48%;
+    margin-bottom: 8px;
+}
+
+.action-btn.save {
+    background: #28a745;
+    color: white;
+}
+
+.action-btn.load {
+    background: #007acc;
+    color: white;
+}
+
+.action-btn.reset {
+    background: #dc3545;
+    color: white;
+}
+
+.action-btn.fullscreen {
+    background: #6f42c1;
+    color: white;
+    width: 100%;
+    -webkit-grid-column: span 2;
+    -moz-grid-column: span 2;
+    grid-column: span 2;
+}
+
+.action-btn:hover {
     -webkit-transform: translateY(-2px);
     -moz-transform: translateY(-2px);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.auth-message {
+/* Upload Section Improvements */
+.upload-section {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 12px;
+}
+
+.upload-section h4 {
     color: #ffffff;
+    margin-bottom: 10px;
     font-size: 0.9em;
+    font-weight: 500;
+}
+
+.upload-type {
+    margin-bottom: 8px;
+}
+
+.toggle-label {
+    color: rgba(255, 255, 255, 0.8);
+    display: -webkit-flex;
+    display: -moz-flex;
+    display: flex;
+    -webkit-align-items: center;
+    -moz-align-items: center;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85em;
+    cursor: pointer;
+}
+
+/* User Info Improvements */
+.user-info {
+    background: rgba(40, 167, 69, 0.1);
+    border: 1px solid rgba(40, 167, 69, 0.3);
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 12px;
     text-align: center;
-    margin: 10px 0;
 }
 
-.auth-message.error {
-    color: #dc3545;
-}
-
-.auth-message.success {
-    color: #28a745;
+.user-info p {
+    color: #ffffff;
+    margin-bottom: 8px;
+    font-size: 0.9em;
 }
 
 /* File Management */
 .file-management {
-    margin-top: 20px;
+    margin-top: 12px;
 }
 
 /* Progress Bar Animation */
@@ -808,7 +1130,7 @@ body {
     transform: scale(1.05);
 }
 
-/* Settings Toggle Button - Enhanced for Android 4 compatibility */
+/* Settings Toggle Button */
 .settings-toggle {
     position: fixed;
     top: 20px;
@@ -825,20 +1147,6 @@ body {
     -moz-transition: all 0.3s ease;
     transition: all 0.3s ease;
     z-index: 999;
-    
-    /* Android 4 touch compatibility */
-    -webkit-tap-highlight-color: rgba(0,0,0,0);
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    
-    /* Ensure visibility on older browsers */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
 }
 
 .settings-toggle:hover {
@@ -874,27 +1182,6 @@ body {
 
 .custom-panel::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.5);
-}
-
-/* Android 4 specific fallbacks */
-.android-4-fallback {
-    /* Fallback styles for very old Android browsers */
-    background-attachment: scroll !important;
-}
-
-.android-4-fallback video {
-    /* Force video to cover full screen on old Android */
-    min-width: 100% !important;
-    min-height: 100% !important;
-}
-
-/* Enhanced fallbacks for old browsers */
-body {
-    /* Ensure background properties work on older browsers */
-    -webkit-background-size: cover;
-    -moz-background-size: cover;
-    -o-background-size: cover;
-    background-size: cover;
 }
 
 /* Responsive Design */
@@ -959,4 +1246,202 @@ body {
     -webkit-animation: fadeIn 1s ease-out;
     -moz-animation: fadeIn 1s ease-out;
     animation: fadeIn 1s ease-out;
+}
+
+/* Flip Clock Styles */
+.flip-clock {
+  text-align: center;
+  perspective: 400px;
+  margin: 20px auto;
+}
+
+.flip-clock *,
+.flip-clock *:before,
+.flip-clock *:after {
+  box-sizing: border-box;
+}
+
+.flip-clock__piece {
+  display: inline-block;
+  margin: 0 5px;
+}
+
+.flip-clock__slot {
+  font-size: 2.5vw;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 15px;
+  display: block;
+}
+
+.flip-clock .card {
+  display: block;
+  position: relative;
+  padding-bottom: 0.72em;
+  font-size: 12vw;
+  line-height: 0.95;
+}
+
+.flip-clock .card__top,
+.flip-clock .card__bottom,
+.flip-clock .card__back::before,
+.flip-clock .card__back::after {
+  display: block;
+  height: 0.72em;
+  color: #ccc;
+  background: #222;
+  padding: 0.25em 0.25em;
+  border-radius: 0.15em 0.15em 0 0;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  width: 1.8em;
+  transform: translateZ(0);
+  text-align: center;
+  line-height: 0.72em;
+}
+
+.flip-clock .card__bottom {
+  color: #FFF;
+  position: absolute;
+  top: 50%;
+  left: 0;
+  border-top: solid 1px #000;
+  background: #393939;
+  border-radius: 0 0 0.15em 0.15em;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.flip-clock .card__bottom::after {
+  display: block;
+  margin-top: -0.72em;
+}
+
+.flip-clock .card__back::before,
+.flip-clock .card__bottom::after {
+  content: attr(data-value);
+}
+
+.flip-clock .card__back {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  left: 0%;
+  pointer-events: none;
+}
+
+.flip-clock .card__back::before {
+  position: relative;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.flip .card__back::before {
+  -webkit-animation: flipTop 0.3s cubic-bezier(0.37, 0.01, 0.94, 0.35);
+          animation: flipTop 0.3s cubic-bezier(0.37, 0.01, 0.94, 0.35);
+  -webkit-animation-fill-mode: both;
+          animation-fill-mode: both;
+  transform-origin: center bottom;
+}
+
+.flip .card__back .card__bottom {
+  transform-origin: center top;
+  -webkit-animation-fill-mode: both;
+          animation-fill-mode: both;
+  -webkit-animation: flipBottom 0.6s cubic-bezier(0.15, 0.45, 0.28, 1);
+          animation: flipBottom 0.6s cubic-bezier(0.15, 0.45, 0.28, 1);
+}
+
+@-webkit-keyframes flipTop {
+  0% {
+    transform: rotateX(0deg);
+    z-index: 2;
+  }
+  0%,
+  99% {
+    opacity: 0.99;
+  }
+  100% {
+    transform: rotateX(-90deg);
+    opacity: 0;
+  }
+}
+
+@keyframes flipTop {
+  0% {
+    transform: rotateX(0deg);
+    z-index: 2;
+  }
+  0%,
+  99% {
+    opacity: 0.99;
+  }
+  100% {
+    transform: rotateX(-90deg);
+    opacity: 0;
+  }
+}
+
+@-webkit-keyframes flipBottom {
+  0%,
+  50% {
+    z-index: -1;
+    transform: rotateX(90deg);
+    opacity: 0;
+  }
+  51% {
+    opacity: 0.99;
+  }
+  100% {
+    opacity: 0.99;
+    transform: rotateX(0deg);
+    z-index: 5;
+  }
+}
+
+@keyframes flipBottom {
+  0%,
+  50% {
+    z-index: -1;
+    transform: rotateX(90deg);
+    opacity: 0;
+  }
+  51% {
+    opacity: 0.99;
+  }
+  100% {
+    opacity: 0.99;
+    transform: rotateX(0deg);
+    z-index: 5;
+  }
+}
+
+/* Responsive adjustments for flip clock */
+@media (max-width: 1200px) {
+    .flip-clock .card {
+        font-size: 10vw;
+    }
+    .flip-clock__slot {
+        font-size: 2.2vw;
+    }
+}
+
+@media (max-width: 768px) {
+    .flip-clock .card {
+        font-size: 8vw;
+    }
+    .flip-clock__slot {
+        font-size: 2vw;
+    }
+}
+
+@media (max-width: 480px) {
+    .flip-clock .card {
+        font-size: 6vw;
+    }
+    .flip-clock__slot {
+        font-size: 1.8vw;
+    }
+    .flip-clock__piece {
+        margin: 0 2px;
+    }
 }

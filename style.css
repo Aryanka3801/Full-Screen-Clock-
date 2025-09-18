@@ -437,51 +437,6 @@ body {
     gap: 10px;
 }
 
-/* Preset Backgrounds */
-.preset-grid {
-    display: -webkit-grid;
-    display: -moz-grid;
-    display: grid;
-    -webkit-grid-template-columns: repeat(3, 1fr);
-    -moz-grid-template-columns: repeat(3, 1fr);
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    -webkit-grid-gap: 10px;
-    -moz-grid-gap: 10px;
-}
-
-/* Fallback for older browsers */
-.preset-grid {
-    display: -webkit-flex;
-    display: -moz-flex;
-    display: flex;
-    -webkit-flex-wrap: wrap;
-    -moz-flex-wrap: wrap;
-    flex-wrap: wrap;
-}
-
-.preset-bg {
-    width: 30%;
-    height: 60px;
-    border-radius: 8px;
-    cursor: pointer;
-    border: 2px solid transparent;
-    -webkit-transition: all 0.2s;
-    -moz-transition: all 0.2s;
-    transition: all 0.2s;
-    margin-bottom: 10px;
-}
-
-.preset-bg:hover {
-    border-color: #ffffff;
-    -webkit-transform: scale(1.05);
-    -moz-transform: scale(1.05);
-    transform: scale(1.05);
-}
-
-.preset-bg.active {
-    border-color: #007acc;
-}
 
 /* Font Color */
 .section input[type="color"] {

@@ -136,7 +136,6 @@ DigitalClock.prototype.initializeElements = function() {
     this.liveWallpaperSelect = document.getElementById('liveWallpaper');
     this.customLiveWallpaperInput = document.getElementById('customLiveWallpaper');
     this.fontColorInput = document.getElementById('fontColor');
-    this.presetBackgrounds = this.getElementsFromClass('preset-bg');
     
     // Control buttons
     this.saveButton = document.getElementById('saveSettings');
@@ -151,7 +150,6 @@ DigitalClock.prototype.initializeElements = function() {
     this.solidControls = document.getElementById('solidControls');
     this.gradientControls = document.getElementById('gradientControls');
     this.imageControls = document.getElementById('imageControls');
-    this.presetControls = document.getElementById('presetControls');
     this.liveControls = document.getElementById('liveControls');
 };
 
@@ -239,13 +237,6 @@ DigitalClock.prototype.bindEvents = function() {
         self.handleCustomLiveWallpaperUpload(e);
     });
     
-    // Preset backgrounds
-    for (var i = 0; i < this.presetBackgrounds.length; i++) {
-        addEvent(this.presetBackgrounds[i], 'click', function(e) {
-            var bg = this.getAttribute('data-bg');
-            self.setPresetBackground(bg, this);
-        });
-    }
     
     // Control buttons
     addEvent(this.saveButton, 'click', function() {
@@ -311,7 +302,6 @@ DigitalClock.prototype.showBackgroundControls = function(type) {
     if (this.solidControls) this.solidControls.style.display = 'none';
     if (this.gradientControls) this.gradientControls.style.display = 'none';
     if (this.imageControls) this.imageControls.style.display = 'none';
-    if (this.presetControls) this.presetControls.style.display = 'none';
     if (this.liveControls) this.liveControls.style.display = 'none';
     
     // Show the relevant control
@@ -324,9 +314,6 @@ DigitalClock.prototype.showBackgroundControls = function(type) {
             break;
         case 'image':
             if (this.imageControls) this.imageControls.style.display = 'block';
-            break;
-        case 'preset':
-            if (this.presetControls) this.presetControls.style.display = 'block';
             break;
         case 'live':
             if (this.liveControls) this.liveControls.style.display = 'block';
@@ -514,23 +501,6 @@ DigitalClock.prototype.handleImageUpload = function(event) {
     }
 };
 
-DigitalClock.prototype.setPresetBackground = function(preset, element) {
-    this.settings.backgroundType = 'preset';
-    this.settings.presetBackground = preset;
-    this.applyBackground();
-    
-    // Update active preset
-    for (var i = 0; i < this.presetBackgrounds.length; i++) {
-        removeClass(this.presetBackgrounds[i], 'active');
-    }
-    addClass(element, 'active');
-    
-    // Update radio button
-    var gradientRadio = document.querySelector('input[name="bgType"][value="gradient"]');
-    if (gradientRadio) {
-        gradientRadio.checked = true;
-    }
-};
 
 DigitalClock.prototype.applyBackground = function() {
     // Remove existing live wallpaper if switching away from it
@@ -562,9 +532,6 @@ DigitalClock.prototype.applyBackground = function() {
                 document.body.style.backgroundRepeat = 'no-repeat';
             }
             break;
-        case 'preset':
-            backgroundStyle = this.getPresetBackground(this.settings.presetBackground);
-            break;
         case 'live':
             document.body.style.background = '#000000';
             document.body.style.backgroundImage = 'none';
@@ -585,17 +552,6 @@ DigitalClock.prototype.applyBackground = function() {
     }
 };
 
-DigitalClock.prototype.getPresetBackground = function(preset) {
-    var presets = {
-        'dark-gradient': 'linear-gradient(45deg, #1a1a1a, #2d2d30)',
-        'blue-gradient': 'linear-gradient(45deg, #0066cc, #004499)',
-        'purple-gradient': 'linear-gradient(45deg, #6a0dad, #4b0082)',
-        'green-gradient': 'linear-gradient(45deg, #2d5016, #3d7c47)',
-        'red-gradient': 'linear-gradient(45deg, #8b0000, #dc143c)',
-        'sunset': 'linear-gradient(45deg, #ff6b6b, #feca57)'
-    };
-    return presets[preset] || presets['dark-gradient'];
-};
 
 DigitalClock.prototype.updateActiveButton = function(buttons, attribute, activeValue) {
     for (var i = 0; i < buttons.length; i++) {
@@ -928,6 +884,40 @@ DigitalClock.prototype.createLiveWallpaper = function(type) {
         case 'geometric':
             this.startGeometric(ctx, canvas);
             break;
+        case 'nebula':
+            this.startNebula(ctx, canvas);
+            break;
+        case 'plasma':
+            this.startPlasma(ctx, canvas);
+            break;
+        case 'vortex':
+            this.startVortex(ctx, canvas);
+            break;
+        case 'neural':
+            this.startNeural(ctx, canvas);
+            break;
+        case 'dna':
+            this.startDna(ctx, canvas);
+            break;
+        case 'constellation':
+            this.startConstellation(ctx, canvas);
+            break;
+        case 'aurora':
+            this.startAurora(ctx, canvas);
+            break;
+        case 'fractal':
+            this.startFractal(ctx, canvas);
+            break;
+        case 'hologram':
+            this.startHologram(ctx, canvas);
+            break;
+        case 'blackhole':
+            this.startBlackhole(ctx, canvas);
+            break;
+        default:
+            // Fallback to matrix rain if unknown type
+            this.startMatrixRain(ctx, canvas);
+            break;
     }
 };
 
@@ -1134,6 +1124,736 @@ DigitalClock.prototype.startGeometric = function(ctx, canvas) {
             ctx.rect(-50, -50, 100, 100);
             ctx.stroke();
             
+            ctx.restore();
+        }
+        
+        time++;
+    }
+    
+    this.liveWallpaperAnimation = setInterval(draw, 16);
+};
+
+// Cosmic Nebula Animation - Dark swirling nebula clouds
+DigitalClock.prototype.startNebula = function(ctx, canvas) {
+    var particles = [];
+    var particleCount = 300;
+    var time = 0;
+    
+    for (var i = 0; i < particleCount; i++) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            vx: (Math.random() - 0.5) * 0.5,
+            vy: (Math.random() - 0.5) * 0.5,
+            size: Math.random() * 2 + 1,
+            hue: Math.random() * 60 + 240, // Purple/blue hues
+            alpha: Math.random() * 0.7 + 0.1
+        });
+    }
+    
+    var self = this;
+    function draw() {
+        ctx.fillStyle = 'rgba(5, 5, 15, 0.02)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        for (var i = 0; i < particles.length; i++) {
+            var p = particles[i];
+            
+            // Swirling motion
+            var centerX = canvas.width / 2;
+            var centerY = canvas.height / 2;
+            var dx = p.x - centerX;
+            var dy = p.y - centerY;
+            var distance = Math.sqrt(dx * dx + dy * dy);
+            var angle = Math.atan2(dy, dx) + time * 0.001;
+            
+            p.x += p.vx + Math.cos(angle) * 0.2;
+            p.y += p.vy + Math.sin(angle) * 0.2;
+            
+            if (p.x < 0) p.x = canvas.width;
+            if (p.x > canvas.width) p.x = 0;
+            if (p.y < 0) p.y = canvas.height;
+            if (p.y > canvas.height) p.y = 0;
+            
+            ctx.save();
+            ctx.globalAlpha = p.alpha;
+            ctx.fillStyle = 'hsl(' + p.hue + ', 100%, 50%)';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = 'hsl(' + p.hue + ', 100%, 50%)';
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+        time++;
+    }
+    
+    this.liveWallpaperAnimation = setInterval(draw, 16);
+};
+
+// Plasma Energy Animation - Electric plasma effects
+DigitalClock.prototype.startPlasma = function(ctx, canvas) {
+    var time = 0;
+    
+    var self = this;
+    function draw() {
+        ctx.fillStyle = 'rgba(10, 0, 20, 0.1)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        var imageData = ctx.createImageData(canvas.width, canvas.height);
+        var data = imageData.data;
+        
+        for (var x = 0; x < canvas.width; x += 2) {
+            for (var y = 0; y < canvas.height; y += 2) {
+                var value = Math.sin(x * 0.01 + time * 0.02) + Math.sin(y * 0.01 + time * 0.02) + 
+                           Math.sin((x + y) * 0.01 + time * 0.01) + Math.sin(Math.sqrt(x*x + y*y) * 0.01 + time * 0.03);
+                
+                value = (value + 4) / 8;
+                
+                var index = (y * canvas.width + x) * 4;
+                if (index < data.length) {
+                    data[index] = Math.floor(value * 100);     // Red
+                    data[index + 1] = Math.floor(value * 255); // Green
+                    data[index + 2] = Math.floor(value * 255); // Blue
+                    data[index + 3] = 255; // Alpha
+                }
+            }
+        }
+        
+        ctx.putImageData(imageData, 0, 0);
+        time++;
+    }
+    
+    this.liveWallpaperAnimation = setInterval(draw, 50);
+};
+
+// Dark Vortex Animation - Spiral vortex effect
+DigitalClock.prototype.startVortex = function(ctx, canvas) {
+    var particles = [];
+    var particleCount = 200;
+    var time = 0;
+    
+    for (var i = 0; i < particleCount; i++) {
+        var angle = Math.random() * Math.PI * 2;
+        var radius = Math.random() * 300;
+        particles.push({
+            angle: angle,
+            radius: radius,
+            speed: Math.random() * 0.02 + 0.01,
+            size: Math.random() * 3 + 1,
+            life: 1
+        });
+    }
+    
+    var self = this;
+    function draw() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        var centerX = canvas.width / 2;
+        var centerY = canvas.height / 2;
+        
+        for (var i = 0; i < particles.length; i++) {
+            var p = particles[i];
+            
+            p.angle += p.speed;
+            p.radius -= 0.5;
+            p.life -= 0.002;
+            
+            if (p.radius < 10 || p.life <= 0) {
+                p.angle = Math.random() * Math.PI * 2;
+                p.radius = 300;
+                p.life = 1;
+            }
+            
+            var x = centerX + Math.cos(p.angle) * p.radius;
+            var y = centerY + Math.sin(p.angle) * p.radius;
+            
+            ctx.save();
+            ctx.globalAlpha = p.life;
+            ctx.fillStyle = 'hsl(' + (240 + p.angle * 20) + ', 100%, 60%)';
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = 'hsl(' + (240 + p.angle * 20) + ', 100%, 60%)';
+            ctx.beginPath();
+            ctx.arc(x, y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+        
+        time++;
+    }
+    
+    this.liveWallpaperAnimation = setInterval(draw, 16);
+};
+
+// Neural Network Animation - Connected network nodes
+DigitalClock.prototype.startNeural = function(ctx, canvas) {
+    var nodes = [];
+    var nodeCount = 80;
+    
+    for (var i = 0; i < nodeCount; i++) {
+        nodes.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            vx: (Math.random() - 0.5) * 1,
+            vy: (Math.random() - 0.5) * 1,
+            pulse: Math.random() * Math.PI * 2
+        });
+    }
+    
+    var self = this;
+    function draw() {
+        ctx.fillStyle = 'rgba(5, 5, 20, 0.03)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Update nodes
+        for (var i = 0; i < nodes.length; i++) {
+            var node = nodes[i];
+            node.x += node.vx;
+            node.y += node.vy;
+            node.pulse += 0.1;
+            
+            if (node.x < 0 || node.x > canvas.width) node.vx = -node.vx;
+            if (node.y < 0 || node.y > canvas.height) node.vy = -node.vy;
+        }
+        
+        // Draw connections
+        ctx.strokeStyle = 'rgba(0, 255, 200, 0.1)';
+        ctx.lineWidth = 1;
+        for (var i = 0; i < nodes.length; i++) {
+            for (var j = i + 1; j < nodes.length; j++) {
+                var dx = nodes[i].x - nodes[j].x;
+                var dy = nodes[i].y - nodes[j].y;
+                var distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < 120) {
+                    ctx.globalAlpha = (120 - distance) / 120 * 0.3;
+                    ctx.beginPath();
+                    ctx.moveTo(nodes[i].x, nodes[i].y);
+                    ctx.lineTo(nodes[j].x, nodes[j].y);
+                    ctx.stroke();
+                }
+            }
+        }
+        
+        // Draw nodes
+        for (var i = 0; i < nodes.length; i++) {
+            var node = nodes[i];
+            var size = 2 + Math.sin(node.pulse) * 1;
+            
+            ctx.save();
+            ctx.globalAlpha = 0.8;
+            ctx.fillStyle = 'rgb(0, 255, 200)';
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = 'rgb(0, 255, 200)';
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+        
+        ctx.globalAlpha = 1;
+    }
+    
+    this.liveWallpaperAnimation = setInterval(draw, 16);
+};
+
+// DNA Helix Animation - Rotating DNA structure
+DigitalClock.prototype.startDna = function(ctx, canvas) {
+    var time = 0;
+    var helixPoints = [];
+    var helixCount = 60;
+    
+    for (var i = 0; i < helixCount; i++) {
+        helixPoints.push({
+            y: (i / helixCount) * canvas.height,
+            phase: (i / helixCount) * Math.PI * 6
+        });
+    }
+    
+    var self = this;
+    function draw() {
+        ctx.fillStyle = 'rgba(0, 10, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        var centerX = canvas.width / 2;
+        var radius = 100;
+        
+        ctx.strokeStyle = 'rgba(0, 255, 100, 0.8)';
+        ctx.lineWidth = 3;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = 'rgba(0, 255, 100, 0.5)';
+        
+        // Draw helix strands
+        ctx.beginPath();
+        for (var i = 0; i < helixPoints.length; i++) {
+            var point = helixPoints[i];
+            var x1 = centerX + Math.cos(point.phase + time * 0.02) * radius;
+            var x2 = centerX + Math.cos(point.phase + time * 0.02 + Math.PI) * radius;
+            
+            if (i === 0) {
+                ctx.moveTo(x1, point.y);
+            } else {
+                ctx.lineTo(x1, point.y);
+            }
+        }
+        ctx.stroke();
+        
+        ctx.beginPath();
+        for (var i = 0; i < helixPoints.length; i++) {
+            var point = helixPoints[i];
+            var x2 = centerX + Math.cos(point.phase + time * 0.02 + Math.PI) * radius;
+            
+            if (i === 0) {
+                ctx.moveTo(x2, point.y);
+            } else {
+                ctx.lineTo(x2, point.y);
+            }
+        }
+        ctx.stroke();
+        
+        // Draw connecting bars
+        ctx.strokeStyle = 'rgba(255, 150, 0, 0.6)';
+        ctx.lineWidth = 2;
+        for (var i = 0; i < helixPoints.length; i += 3) {
+            var point = helixPoints[i];
+            var x1 = centerX + Math.cos(point.phase + time * 0.02) * radius;
+            var x2 = centerX + Math.cos(point.phase + time * 0.02 + Math.PI) * radius;
+            
+            ctx.beginPath();
+            ctx.moveTo(x1, point.y);
+            ctx.lineTo(x2, point.y);
+            ctx.stroke();
+        }
+        
+        time++;
+    }
+    
+    this.liveWallpaperAnimation = setInterval(draw, 16);
+};
+
+// Moving Constellations Animation - Stars forming patterns
+DigitalClock.prototype.startConstellation = function(ctx, canvas) {
+    var stars = [];
+    var starCount = 100;
+    var constellations = [];
+    var time = 0;
+    
+    for (var i = 0; i < starCount; i++) {
+        stars.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            vx: (Math.random() - 0.5) * 0.2,
+            vy: (Math.random() - 0.5) * 0.2,
+            brightness: Math.random() * 0.8 + 0.2,
+            twinkle: Math.random() * Math.PI * 2,
+            size: Math.random() * 2 + 1
+        });
+    }
+    
+    // Generate constellation patterns
+    for (var i = 0; i < 5; i++) {
+        var constellation = [];
+        var baseX = Math.random() * canvas.width;
+        var baseY = Math.random() * canvas.height;
+        var starIndices = [];
+        
+        for (var j = 0; j < 6; j++) {
+            starIndices.push(Math.floor(Math.random() * stars.length));
+        }
+        constellations.push(starIndices);
+    }
+    
+    var self = this;
+    function draw() {
+        ctx.fillStyle = 'rgba(0, 0, 10, 0.02)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Update stars
+        for (var i = 0; i < stars.length; i++) {
+            var star = stars[i];
+            star.x += star.vx;
+            star.y += star.vy;
+            star.twinkle += 0.1;
+            
+            if (star.x < 0) star.x = canvas.width;
+            if (star.x > canvas.width) star.x = 0;
+            if (star.y < 0) star.y = canvas.height;
+            if (star.y > canvas.height) star.y = 0;
+        }
+        
+        // Draw constellation lines
+        ctx.strokeStyle = 'rgba(100, 150, 255, 0.3)';
+        ctx.lineWidth = 1;
+        for (var i = 0; i < constellations.length; i++) {
+            var constellation = constellations[i];
+            for (var j = 0; j < constellation.length - 1; j++) {
+                var star1 = stars[constellation[j]];
+                var star2 = stars[constellation[j + 1]];
+                
+                ctx.beginPath();
+                ctx.moveTo(star1.x, star1.y);
+                ctx.lineTo(star2.x, star2.y);
+                ctx.stroke();
+            }
+        }
+        
+        // Draw stars
+        for (var i = 0; i < stars.length; i++) {
+            var star = stars[i];
+            var brightness = star.brightness + Math.sin(star.twinkle) * 0.3;
+            
+            ctx.save();
+            ctx.globalAlpha = brightness;
+            ctx.fillStyle = 'white';
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = 'white';
+            ctx.beginPath();
+            ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+        
+        time++;
+    }
+    
+    this.liveWallpaperAnimation = setInterval(draw, 16);
+};
+
+// Digital Aurora Animation - Northern lights effect
+DigitalClock.prototype.startAurora = function(ctx, canvas) {
+    var waves = [];
+    var waveCount = 8;
+    var time = 0;
+    
+    for (var i = 0; i < waveCount; i++) {
+        waves.push({
+            y: canvas.height * 0.3 + i * 30,
+            amplitude: Math.random() * 50 + 30,
+            frequency: Math.random() * 0.02 + 0.01,
+            speed: Math.random() * 0.02 + 0.01,
+            hue: Math.random() * 60 + 120, // Green/blue aurora colors
+            alpha: Math.random() * 0.5 + 0.3
+        });
+    }
+    
+    var self = this;
+    function draw() {
+        ctx.fillStyle = 'rgba(0, 5, 20, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        for (var i = 0; i < waves.length; i++) {
+            var wave = waves[i];
+            
+            ctx.save();
+            ctx.globalAlpha = wave.alpha;
+            ctx.strokeStyle = 'hsl(' + wave.hue + ', 100%, 60%)';
+            ctx.lineWidth = 3;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = 'hsl(' + wave.hue + ', 100%, 60%)';
+            
+            ctx.beginPath();
+            for (var x = 0; x < canvas.width; x++) {
+                var y = wave.y + Math.sin(x * wave.frequency + time * wave.speed) * wave.amplitude;
+                if (x === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            ctx.restore();
+            
+            // Add shimmer effect
+            if (Math.random() < 0.1) {
+                wave.alpha = Math.random() * 0.5 + 0.3;
+                wave.hue += (Math.random() - 0.5) * 10;
+                if (wave.hue < 80) wave.hue = 80;
+                if (wave.hue > 180) wave.hue = 180;
+            }
+        }
+        
+        time++;
+    }
+    
+    this.liveWallpaperAnimation = setInterval(draw, 16);
+};
+
+// Fractal Dreams Animation - Recursive fractal patterns
+DigitalClock.prototype.startFractal = function(ctx, canvas) {
+    var time = 0;
+    var branches = [];
+    
+    function generateBranch(x, y, angle, length, depth) {
+        if (depth <= 0 || length < 2) return;
+        
+        var endX = x + Math.cos(angle) * length;
+        var endY = y + Math.sin(angle) * length;
+        
+        branches.push({
+            x1: x, y1: y, x2: endX, y2: endY,
+            depth: depth, length: length,
+            hue: (depth * 20 + time * 2) % 360
+        });
+        
+        if (depth > 2) {
+            generateBranch(endX, endY, angle - 0.5, length * 0.7, depth - 1);
+            generateBranch(endX, endY, angle + 0.5, length * 0.7, depth - 1);
+        }
+    }
+    
+    var self = this;
+    function draw() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.03)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        branches = [];
+        
+        var centerX = canvas.width / 2;
+        var centerY = canvas.height;
+        var mainLength = 120;
+        var maxDepth = 8;
+        
+        generateBranch(centerX, centerY, -Math.PI/2 + Math.sin(time * 0.01) * 0.2, mainLength, maxDepth);
+        
+        // Draw all branches
+        for (var i = 0; i < branches.length; i++) {
+            var branch = branches[i];
+            var alpha = branch.depth / maxDepth * 0.8;
+            
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.strokeStyle = 'hsl(' + branch.hue + ', 70%, 50%)';
+            ctx.lineWidth = Math.max(1, branch.depth / 2);
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = 'hsl(' + branch.hue + ', 70%, 50%)';
+            
+            ctx.beginPath();
+            ctx.moveTo(branch.x1, branch.y1);
+            ctx.lineTo(branch.x2, branch.y2);
+            ctx.stroke();
+            ctx.restore();
+        }
+        
+        time++;
+    }
+    
+    this.liveWallpaperAnimation = setInterval(draw, 50);
+};
+
+// Holographic Grid Animation - Futuristic grid patterns
+DigitalClock.prototype.startHologram = function(ctx, canvas) {
+    var time = 0;
+    var gridSize = 40;
+    var pulseNodes = [];
+    
+    // Generate random pulse points
+    for (var i = 0; i < 5; i++) {
+        pulseNodes.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            radius: 0,
+            maxRadius: 200,
+            speed: 2,
+            intensity: 1
+        });
+    }
+    
+    var self = this;
+    function draw() {
+        ctx.fillStyle = 'rgba(0, 10, 20, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Update pulse nodes
+        for (var i = 0; i < pulseNodes.length; i++) {
+            var node = pulseNodes[i];
+            node.radius += node.speed;
+            node.intensity = 1 - (node.radius / node.maxRadius);
+            
+            if (node.radius > node.maxRadius) {
+                node.x = Math.random() * canvas.width;
+                node.y = Math.random() * canvas.height;
+                node.radius = 0;
+                node.intensity = 1;
+            }
+        }
+        
+        // Draw grid
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.1)';
+        ctx.lineWidth = 1;
+        
+        for (var x = 0; x <= canvas.width; x += gridSize) {
+            var alpha = 0.1;
+            
+            // Check distance to pulse nodes
+            for (var i = 0; i < pulseNodes.length; i++) {
+                var node = pulseNodes[i];
+                var distance = Math.abs(x - node.x);
+                if (distance < node.radius) {
+                    alpha = Math.max(alpha, 0.8 * node.intensity * (1 - distance / node.radius));
+                }
+            }
+            
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, canvas.height);
+            ctx.stroke();
+            ctx.restore();
+        }
+        
+        for (var y = 0; y <= canvas.height; y += gridSize) {
+            var alpha = 0.1;
+            
+            // Check distance to pulse nodes
+            for (var i = 0; i < pulseNodes.length; i++) {
+                var node = pulseNodes[i];
+                var distance = Math.abs(y - node.y);
+                if (distance < node.radius) {
+                    alpha = Math.max(alpha, 0.8 * node.intensity * (1 - distance / node.radius));
+                }
+            }
+            
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvas.width, y);
+            ctx.stroke();
+            ctx.restore();
+        }
+        
+        // Draw pulse circles
+        for (var i = 0; i < pulseNodes.length; i++) {
+            var node = pulseNodes[i];
+            ctx.save();
+            ctx.globalAlpha = node.intensity * 0.5;
+            ctx.strokeStyle = 'rgb(0, 255, 255)';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = 'rgb(0, 255, 255)';
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+        }
+        
+        time++;
+    }
+    
+    this.liveWallpaperAnimation = setInterval(draw, 16);
+};
+
+// Black Hole Animation - Gravitational distortion effect
+DigitalClock.prototype.startBlackhole = function(ctx, canvas) {
+    var particles = [];
+    var particleCount = 200;
+    var time = 0;
+    var centerX = canvas.width / 2;
+    var centerY = canvas.height / 2;
+    
+    for (var i = 0; i < particleCount; i++) {
+        var angle = Math.random() * Math.PI * 2;
+        var distance = Math.random() * 400 + 100;
+        particles.push({
+            x: centerX + Math.cos(angle) * distance,
+            y: centerY + Math.sin(angle) * distance,
+            vx: Math.random() * 2 - 1,
+            vy: Math.random() * 2 - 1,
+            mass: Math.random() * 2 + 1,
+            life: 1,
+            trail: []
+        });
+    }
+    
+    var self = this;
+    function draw() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.02)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw event horizon
+        ctx.save();
+        ctx.globalAlpha = 0.8;
+        ctx.fillStyle = 'rgb(0, 0, 0)';
+        ctx.shadowBlur = 50;
+        ctx.shadowColor = 'rgba(255, 100, 0, 0.8)';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 30, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        
+        // Draw accretion disk
+        for (var r = 50; r < 150; r += 10) {
+            ctx.save();
+            ctx.globalAlpha = 0.1;
+            ctx.strokeStyle = 'hsl(' + (r + time) % 60 + ', 100%, 60%)';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = 'hsl(' + (r + time) % 60 + ', 100%, 60%)';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+        }
+        
+        // Update and draw particles
+        for (var i = 0; i < particles.length; i++) {
+            var p = particles[i];
+            
+            // Gravitational pull
+            var dx = centerX - p.x;
+            var dy = centerY - p.y;
+            var distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance < 30) {
+                // Reset particle if it falls into black hole
+                var angle = Math.random() * Math.PI * 2;
+                var newDistance = Math.random() * 200 + 300;
+                p.x = centerX + Math.cos(angle) * newDistance;
+                p.y = centerY + Math.sin(angle) * newDistance;
+                p.vx = Math.random() * 2 - 1;
+                p.vy = Math.random() * 2 - 1;
+                p.life = 1;
+                p.trail = [];
+                continue;
+            }
+            
+            var gravity = 200 / (distance * distance);
+            p.vx += (dx / distance) * gravity;
+            p.vy += (dy / distance) * gravity;
+            
+            p.x += p.vx;
+            p.y += p.vy;
+            
+            // Add to trail
+            p.trail.push({x: p.x, y: p.y});
+            if (p.trail.length > 10) {
+                p.trail.shift();
+            }
+            
+            // Draw trail
+            if (p.trail.length > 1) {
+                ctx.strokeStyle = 'rgba(255, 150, 0, 0.3)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(p.trail[0].x, p.trail[0].y);
+                for (var j = 1; j < p.trail.length; j++) {
+                    ctx.lineTo(p.trail[j].x, p.trail[j].y);
+                }
+                ctx.stroke();
+            }
+            
+            // Draw particle
+            var intensity = Math.max(0.1, 1 - distance / 400);
+            ctx.save();
+            ctx.globalAlpha = intensity;
+            ctx.fillStyle = 'hsl(' + (distance / 2 + time) % 60 + ', 100%, 70%)';
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = 'hsl(' + (distance / 2 + time) % 60 + ', 100%, 70%)';
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.mass, 0, Math.PI * 2);
+            ctx.fill();
             ctx.restore();
         }
         
